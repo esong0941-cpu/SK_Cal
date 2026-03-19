@@ -1,0 +1,1251 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>SKB 홈앤서비스 계산기</title>
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="SKB 계산기">
+<meta name="theme-color" content="#ffffff">
+<link rel="manifest" href="manifest.json">
+<script>
+if('serviceWorker' in navigator){
+  const swCode=`const CACHE='skb-v5';const ASSETS=['/','/index.html','/manifest.json','/icon-192(1).png','/icon-512(1).png'];self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS).catch(()=>{})));self.skipWaiting();});self.addEventListener('activate',e=>{self.clients.claim();});self.addEventListener('fetch',e=>{e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request)));});`;
+  const b=new Blob([swCode],{type:'application/javascript'});
+  navigator.serviceWorker.register(URL.createObjectURL(b)).catch(()=>{});
+}
+</script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap');
+
+:root{
+  --p:#2563EB;
+  --p-bg:#EFF6FF;
+  --g100:#F3F4F6;
+  --g400:#9CA3AF;
+  --g500:#6B7280;
+  --g700:#374151;
+  --g900:#111827;
+  --red:#E8001C;
+  --bg:#F4F5F8;
+  --w:#FFFFFF;
+  --bd:#E5E7EB;
+  --card-r:16px;
+  --card-sh:0 2px 8px rgba(0,0,0,.06);
+}
+
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden}
+body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--g900);display:flex;flex-direction:column}
+
+/* SVG 공통 */
+svg{display:inline-block;vertical-align:middle;flex-shrink:0}
+
+/* ── HEADER ── */
+.hdr{background:var(--w);padding:11px 18px 10px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--bd);flex-shrink:0}
+.hdr-l{display:flex;align-items:center;gap:8px}
+.hdr-logo{background:var(--red);color:#fff;font-size:11px;font-weight:900;padding:3px 8px;border-radius:6px;letter-spacing:.5px}
+.hdr-title{font-size:15px;font-weight:800;color:var(--g900)}
+.hdr-amt{font-size:14px;font-weight:800;color:var(--p)}
+
+/* ── PWA 배너 ── */
+.install-banner{background:#1e3a5f;padding:9px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-shrink:0}
+.install-banner-txt{color:rgba(255,255,255,.85);font-size:11px;font-weight:600;flex:1}
+.install-banner-txt b{color:#fff;display:block;font-size:12px;margin-bottom:1px}
+.install-btn{background:var(--red);color:#fff;border:none;border-radius:8px;padding:6px 12px;font-family:inherit;font-size:11px;font-weight:800;cursor:pointer}
+.install-dismiss{background:none;border:none;color:rgba(255,255,255,.4);font-size:16px;cursor:pointer;padding:4px;line-height:1}
+
+/* ── TAB BAR ── */
+.tab-bar{display:grid;grid-template-columns:1fr 1fr;background:var(--w);border-bottom:1px solid var(--bd);flex-shrink:0}
+.tab-btn{padding:12px 0 10px;border:none;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;background:transparent;color:var(--g400);border-bottom:2px solid transparent;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:6px}
+.tab-btn.on{color:var(--p);border-bottom-color:var(--p)}
+.tab-badge{background:var(--red);color:#fff;font-size:9px;font-weight:800;padding:1px 6px;border-radius:10px}
+
+/* ── SCROLL ── */
+.tab-content{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:120px}
+.tab-pane{display:none;padding:12px 12px 0;max-width:480px;margin:0 auto}
+.tab-pane.on{display:block}
+
+/* ── CARD ── */
+.card{background:var(--w);border-radius:var(--card-r);padding:16px;margin-bottom:10px;box-shadow:var(--card-sh)}
+
+/* ── 섹션 라벨 ── */
+.sec-lbl{font-size:11px;font-weight:700;color:var(--g400);margin-bottom:8px;letter-spacing:.3px}
+
+/* ── 구분선 ── */
+.dv{height:1px;background:var(--bd);margin:14px 0}
+
+/* ════ 선택 버튼 (테두리 없음, 배경+그림자만) ════ */
+.btn{
+  padding:11px 6px;border-radius:10px;
+  border:none;outline:none;
+  background:var(--g100);
+  font-family:inherit;font-size:12px;font-weight:700;
+  color:var(--g500);cursor:pointer;
+  transition:background .14s,box-shadow .14s,color .14s;
+  display:flex;align-items:center;justify-content:center;
+  gap:5px;text-align:center;line-height:1.25;
+  -webkit-tap-highlight-color:transparent;
+  position:relative;
+}
+.btn svg{stroke:var(--g500);transition:stroke .14s}
+.btn-sub{display:block;font-size:9px;font-weight:500;color:var(--g400);margin-top:1px;transition:color .14s}
+
+/* 선택 상태 — 배경만 파랗게, 테두리 없음 */
+.btn.on{
+  background:var(--p);
+  color:#fff;
+  box-shadow:0 3px 10px rgba(37,99,235,.3);
+}
+.btn.on svg{stroke:#fff}
+.btn.on .btn-sub{color:rgba(255,255,255,.7)}
+
+/* 그리드 */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px}
+.g5{display:grid;grid-template-columns:repeat(5,1fr);gap:5px}
+
+/* ── 힌트 ── */
+.hint{display:flex;align-items:center;gap:6px;margin-top:10px;padding:8px 12px;background:var(--p-bg);border-radius:10px;font-size:11px;font-weight:600;color:var(--p);line-height:1.5}
+
+/* ── 아코디언 ── */
+.opt-accordion{background:var(--w);border-radius:var(--card-r);margin-bottom:10px;box-shadow:var(--card-sh);overflow:hidden}
+.opt-acc-hd{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;cursor:pointer}
+.opt-acc-title{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:800;color:var(--g900)}
+.opt-acc-chevron{transition:transform .2s;color:var(--g400)}
+.opt-acc-chevron.open{transform:rotate(180deg)}
+.opt-acc-body{padding:0 14px 14px;display:none}
+.opt-acc-body.open{display:block}
+
+/* ── 옵션 토글 ── */
+.opt-item{
+  display:flex;align-items:center;gap:10px;
+  padding:11px 13px;border-radius:10px;
+  border:none;background:var(--g100);
+  cursor:pointer;transition:background .14s,box-shadow .14s;
+}
+.opt-item svg{stroke:var(--g500);transition:stroke .14s;width:18px;height:18px;flex-shrink:0}
+.opt-info{flex:1}
+.opt-name{font-size:12px;font-weight:700;color:var(--g500);display:block;transition:color .14s}
+.opt-desc{font-size:10px;color:var(--g400);display:block;margin-top:2px}
+.opt-item.on-sm,.opt-item.on-teal,.opt-item.on-phone{
+  background:var(--p);box-shadow:0 3px 10px rgba(37,99,235,.3);
+}
+.opt-item.on-within2y{background:#F59E0B;box-shadow:0 3px 10px rgba(245,158,11,.3);}
+.opt-item.on-sm svg,.opt-item.on-teal svg,.opt-item.on-phone svg{stroke:#fff}
+.opt-item.on-within2y svg{stroke:#fff}
+.opt-item.on-sm .opt-name,.opt-item.on-teal .opt-name,.opt-item.on-phone .opt-name{color:#fff}
+.opt-item.on-within2y .opt-name{color:#fff}
+.opt-item.on-sm .opt-desc,.opt-item.on-teal .opt-desc,.opt-item.on-phone .opt-desc{color:rgba(255,255,255,.7)}
+.opt-item.on-within2y .opt-desc{color:rgba(255,255,255,.8)}
+
+.opt-note{margin-top:10px;padding:8px 12px;background:var(--p-bg);border-radius:10px;font-size:10px;color:var(--p);line-height:1.6}
+
+/* ── expand 영역 ── */
+.expand-area{padding:12px 16px 14px;background:#F8FAFF;border-top:1px solid var(--bd)}
+.expand-lbl{font-size:10px;font-weight:700;color:var(--p);margin-bottom:8px;display:flex;align-items:center;gap:5px}
+.seonap-tbl{width:100%;border-collapse:collapse;font-size:11px;margin-top:6px}
+.seonap-tbl th{background:#DBEAFE;color:var(--p);font-weight:700;font-size:9px;padding:5px 8px;text-align:left}
+.seonap-tbl th:last-child,.seonap-tbl td:last-child{text-align:right}
+.seonap-tbl td{padding:5px 8px;border-bottom:1px solid #EFF6FF;font-weight:500}
+.seonap-tbl tr:last-child td{border-bottom:none;font-weight:800;color:var(--p)}
+.minus{color:var(--red);font-weight:700}
+
+/* ── 커스텀 드롭다운 ── */
+.sel-lbl{font-size:10px;font-weight:700;color:var(--g400);margin-bottom:5px;display:block}
+.csel-wrap{position:relative;width:100%}
+.csel-trigger{
+  width:100%;padding:11px 14px;
+  border:1.5px solid var(--bd);border-radius:10px;
+  background:var(--w);font-family:inherit;font-size:13px;font-weight:600;color:var(--g900);
+  cursor:pointer;text-align:left;transition:all .15s;
+  display:flex;align-items:center;justify-content:space-between;
+  -webkit-tap-highlight-color:transparent;
+}
+.csel-trigger.placeholder{color:var(--g400)}
+.csel-trigger.open{border-color:var(--p);box-shadow:0 0 0 3px rgba(37,99,235,.1)}
+.csel-arrow{color:var(--g400);flex-shrink:0;margin-left:4px;transition:transform .15s}
+.csel-trigger.open .csel-arrow{transform:rotate(180deg);color:var(--p)}
+.csel-panel{position:fixed;left:0;right:0;bottom:0;z-index:9999;background:#fff;border-radius:20px 20px 0 0;box-shadow:0 -4px 30px rgba(0,0,0,.12);transform:translateY(100%);transition:transform .25s cubic-bezier(.4,0,.2,1);max-height:65vh;display:flex;flex-direction:column}
+.csel-panel.open{transform:translateY(0)}
+.csel-panel-head{display:flex;align-items:center;justify-content:space-between;padding:16px 20px 14px;border-bottom:1px solid var(--bd);flex-shrink:0}
+.csel-panel-title{font-size:15px;font-weight:800;color:var(--g900)}
+.csel-panel-close{width:28px;height:28px;border:none;border-radius:50%;background:var(--g100);color:var(--g500);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:700}
+.csel-options{overflow-y:auto;-webkit-overflow-scrolling:touch;flex:1}
+.csel-option{display:flex;align-items:center;justify-content:space-between;padding:15px 20px;border-bottom:1px solid #F9FAFB;font-size:13px;font-weight:600;color:var(--g900);cursor:pointer;transition:background .1s}
+.csel-option:active{background:var(--p-bg)}
+.csel-option.selected{color:var(--p);background:var(--p-bg)}
+.csel-option.selected::after{content:'✓';font-size:14px;font-weight:900;color:var(--p)}
+.csel-option:last-child{border-bottom:none}
+.csel-overlay{position:fixed;inset:0;background:rgba(0,0,0,.28);z-index:9998;opacity:0;transition:opacity .25s;pointer-events:none}
+.csel-overlay.open{opacity:1;pointer-events:auto}
+
+/* ── 상품 카드 ── */
+.prod-card{background:var(--w);border-radius:var(--card-r);margin-bottom:10px;box-shadow:var(--card-sh);overflow:hidden}
+.prod-sec{padding:14px 16px}
+.prod-sec+.prod-sec{border-top:1px solid var(--bd)}
+.prod-sec-hd{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:800;color:var(--g500);margin-bottom:11px}
+.prod-sec-hd svg{stroke:var(--g500);width:15px;height:15px}
+
+/* 소계 행 */
+.subtot-row{display:flex;justify-content:space-between;align-items:center;background:var(--g100);border-radius:10px;padding:10px 14px;margin-top:10px}
+.subtot-lbl{font-size:10px;font-weight:700;color:var(--g500)}
+.subtot-val{font-size:16px;font-weight:900;color:var(--g900)}
+.subtot-val.dim{color:#D1D5DB;font-size:13px;font-weight:500}
+.subtot-val.blue{color:var(--p)}
+.subtot-unit{font-size:11px;font-weight:600;color:var(--g500);margin-left:2px}
+
+/* 할인 태그 */
+.dc-tag{display:inline-flex;align-items:center;gap:4px;border-radius:6px;padding:3px 8px;font-size:10px;font-weight:700;margin-top:6px;background:var(--p-bg);color:var(--p)}
+
+/* TV g2 */
+.tv-g2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+.tv-extra-item{border-top:1px solid var(--bd);padding:14px 0 4px;animation:fadeUp .18s ease}
+.tv-extra-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.tv-dot-lbl{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:var(--g700)}
+.tv-dot{width:20px;height:20px;border-radius:50%;font-size:9px;font-weight:800;color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.tv-sn{font-size:10px;color:var(--g400)}
+.tv-item-tot{font-size:14px;font-weight:800;color:var(--g900)}
+.tv-fl{font-size:9px;font-weight:700;color:var(--g400);letter-spacing:.3px;margin-bottom:3px}
+.tv-fv{font-size:14px;font-weight:800;color:var(--g900)}
+.tv-fv.dim{color:#D1D5DB}
+.no-tv{text-align:center;padding:14px 0;font-size:12px;color:var(--g400)}
+
+/* ── 결과 탭 ── */
+.res-card{background:var(--w);border-radius:var(--card-r);margin-bottom:10px;box-shadow:var(--card-sh);overflow:hidden}
+.res-hd{display:flex;align-items:center;gap:8px;padding:14px 16px;border-bottom:1px solid var(--bd)}
+.res-hd svg{stroke:var(--g400);width:16px;height:16px}
+.res-title{font-size:13px;font-weight:800;color:var(--g900)}
+.bdgs{display:flex;gap:4px;margin-left:auto;flex-wrap:wrap;justify-content:flex-end}
+.bdg{font-size:9px;font-weight:700;padding:3px 8px;border-radius:20px;background:var(--p-bg);color:var(--p)}
+.bdg-ga{background:#FEF2F2;color:var(--red)}
+
+.benefit-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:14px 16px}
+.bx{border-radius:12px;padding:12px;text-align:center;background:var(--g100)}
+.bx.active{background:var(--p-bg)}
+.bx-lbl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px;color:var(--g500)}
+.bx.active .bx-lbl{color:var(--p)}
+.bx-val{font-size:17px;font-weight:900;color:var(--g900)}
+.bx-val.dim{color:#D1D5DB;font-size:13px;font-weight:500}
+.bx.active .bx-val{color:var(--p)}
+.bx-sub{font-size:9px;color:var(--g400);margin-top:3px;line-height:1.35}
+
+.sum-rows{padding:2px 16px 0}
+.si{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #F3F4F6}
+.si:last-child{border-bottom:none}
+.si-l{display:flex;align-items:center;gap:7px;flex:1;margin-right:8px}
+.si-l svg{width:14px;height:14px;stroke:var(--g400);flex-shrink:0}
+.si-key{font-size:12px;font-weight:700;color:var(--g700)}
+.si-plan{font-size:10px;color:var(--g400);margin-left:4px}
+.si-val{font-size:14px;font-weight:800;color:var(--g900);white-space:nowrap}
+.si-val.dim{color:#D1D5DB;font-weight:400;font-size:12px}
+.si-val.blue{color:var(--p)}
+.si-val.minus{color:var(--red)}
+
+.total-strip{display:flex;justify-content:space-between;align-items:center;background:var(--g900);border-radius:12px;padding:16px 18px;margin:10px 16px 16px}
+.tl{color:rgba(255,255,255,.5);font-size:12px;font-weight:600}
+.tv-amt{color:#fff;font-size:24px;font-weight:900;letter-spacing:-.5px}
+.tv-amt small{font-size:13px;font-weight:500;opacity:.6}
+
+/* ── 문자 카드 ── */
+.sms-input-wrap{padding:12px 16px 8px}
+.sms-box{background:#F8FAFF;border:1.5px solid var(--bd);border-radius:10px;padding:12px 14px;font-size:11.5px;line-height:1.85;color:var(--g900);white-space:pre-wrap;font-family:'Noto Sans KR',sans-serif;margin:0 16px 12px;max-height:260px;overflow-y:auto}
+.sms-btns{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:0 16px 14px}
+.sms-btn{padding:13px 0;border:none;border-radius:12px;font-family:inherit;font-size:13px;font-weight:800;cursor:pointer;transition:transform .15s;color:#fff;display:flex;align-items:center;justify-content:center;gap:6px}
+.sms-btn:active{transform:scale(.97)}
+.sms-btn-copy{background:var(--g700)}
+.sms-btn-send{background:var(--p)}
+.toast{text-align:center;font-size:11px;font-weight:700;color:var(--p);padding:0 0 10px;height:22px;opacity:0;transition:opacity .25s}
+.toast.show{opacity:1}
+
+/* ── STICKY ── */
+.sticky{position:fixed;bottom:0;left:0;right:0;background:var(--w);border-top:1px solid var(--bd);z-index:200}
+.sticky.hidden{display:none}
+.sticky-summary{display:flex;align-items:center;justify-content:space-between;padding:10px 18px 6px}
+.sticky-left{display:flex;flex-direction:column;gap:2px}
+.sticky-lbl{font-size:10px;font-weight:700;color:var(--g400)}
+.sticky-amt{font-size:20px;font-weight:900;color:var(--g900)}
+.sticky-gift{font-size:10px;font-weight:700;color:var(--p);background:var(--p-bg);padding:2px 8px;border-radius:20px;display:inline-block;margin-top:2px}
+.sticky-cta{display:flex;align-items:center;justify-content:center;gap:8px;width:calc(100% - 28px);margin:0 14px 12px;padding:15px 0;border:none;border-radius:14px;background:var(--red);color:#fff;font-family:inherit;font-size:15px;font-weight:900;cursor:pointer;transition:transform .15s;box-shadow:0 4px 16px rgba(232,0,28,.25)}
+.sticky-cta:active{transform:scale(.98)}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
+
+/* SVG 아이콘 헬퍼 */
+.i18{width:18px;height:18px;stroke-width:2}.i16{width:16px;height:16px;stroke-width:2}.i14{width:14px;height:14px;stroke-width:2}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="hdr">
+  <div class="hdr-l">
+    <span class="hdr-logo">SKB</span>
+    <span class="hdr-title">홈앤서비스 계산기</span>
+  </div>
+  <span class="hdr-amt" id="hdr-amt">월 0원</span>
+</div>
+
+<!-- PWA 배너 -->
+<div class="install-banner" id="install-banner" style="display:none">
+  <div class="install-banner-txt"><b>앱으로 설치하기</b>홈화면에 추가하면 앱처럼 사용 가능</div>
+  <button class="install-btn" onclick="installPWA()">설치</button>
+  <button class="install-dismiss" onclick="dismissBanner()">✕</button>
+</div>
+
+<!-- TAB BAR -->
+<div class="tab-bar">
+  <button class="tab-btn on" id="tab-calc" onclick="switchTab('calc')">
+    <svg class="i16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="8.01" y2="10"/><line x1="12" y1="10" x2="12.01" y2="10"/><line x1="16" y1="10" x2="16.01" y2="10"/><line x1="8" y1="14" x2="8.01" y2="14"/><line x1="12" y1="14" x2="12.01" y2="14"/><line x1="16" y1="14" x2="16.01" y2="14"/><line x1="8" y1="18" x2="12" y2="18"/></svg>
+    요금 계산
+  </button>
+  <button class="tab-btn" id="tab-result" onclick="switchTab('result')">
+    <svg class="i16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+    결과 &amp; 문자
+    <span class="tab-badge" id="total-badge">0원</span>
+  </button>
+</div>
+
+<!-- SCROLL -->
+<div class="tab-content">
+
+<!-- ══ TAB 1: 계산기 ══ -->
+<div class="tab-pane on" id="pane-calc">
+
+  <div class="card">
+
+    <!-- 서비스 구성 (3버튼) -->
+    <div class="sec-lbl">서비스 구성</div>
+    <div class="g3">
+      <button class="btn" id="svc-inet" onclick="setSvc('inet')">
+        <svg class="i18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
+        <div><span>인터넷</span></div>
+      </button>
+      <button class="btn on" id="svc-both" onclick="setSvc('both')">
+        <svg class="i18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
+        <div><span>인터넷+TV</span></div>
+      </button>
+      <button class="btn" id="svc-tv" onclick="setSvc('tv_only')">
+        <svg class="i18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="15" rx="2" ry="2"/><polyline points="17 2 12 7 7 2"/></svg>
+        <div><span>TV</span></div>
+      </button>
+    </div>
+
+    <div class="dv"></div>
+
+    <!-- 결합 유형: 인터넷+TV용 (기본/요우결/요가결) -->
+    <div id="type-section" style="display:none">
+      <div class="sec-lbl">결합 유형</div>
+      <div class="g3">
+        <button class="btn" id="btn-basic" onclick="setType('basic')">
+          <svg class="i18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+          <div><span>기본</span><span class="btn-sub">결합없음</span></div>
+        </button>
+        <button class="btn on" id="btn-u" onclick="setType('u')">
+          <svg class="i18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+          <div><span>요우결</span><span class="btn-sub">폰 미결합</span></div>
+        </button>
+        <button class="btn" id="btn-ga" onclick="setType('ga')">
+          <svg class="i18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          <div><span>요가결</span><span class="btn-sub">폰 결합</span></div>
+        </button>
+      </div>
+      <div class="dv"></div>
+    </div>
+
+    <!-- 결합 유형: 인터넷 단독용 (단독/요가결만) -->
+    <div id="type-section-inet" style="display:none">
+      <div class="sec-lbl">결합 유형</div>
+      <div class="g2">
+        <button class="btn on" id="btn-inet-solo" onclick="setType('basic')">
+          <svg class="i18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+          <div><span>단독</span><span class="btn-sub">결합없음</span></div>
+        </button>
+        <button class="btn" id="btn-inet-ga" onclick="setType('ga')">
+          <svg class="i18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          <div><span>요가결</span><span class="btn-sub">폰 결합</span></div>
+        </button>
+      </div>
+      <div class="dv"></div>
+    </div>
+
+    <!-- 할인 구분 -->
+    <div class="sec-lbl">할인 구분</div>
+    <div class="g3">
+      <button class="btn on" id="disc-none" onclick="setDiscount('none')">
+        <svg class="i18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+        <div><span>없음</span><span class="btn-sub">기본요금</span></div>
+      </button>
+      <button class="btn" id="disc-baro" onclick="setDiscount('baro')">
+        <svg class="i18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        <div><span>바로할인</span><span class="btn-sub">인터넷할인</span></div>
+      </button>
+      <button class="btn" id="disc-fam" onclick="setDiscount('fam')">
+        <svg class="i18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        <div><span>패밀리</span><span class="btn-sub">단독 50%</span></div>
+      </button>
+    </div>
+    <div class="hint" id="disc-info" style="display:none">
+      <svg class="i14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <span id="disc-hint-text">기본 요금이 적용됩니다.</span>
+    </div>
+
+    <!-- TV 대수 (인터넷만 선택시 숨김) -->
+    <div id="tv-count-section">
+      <div class="dv"></div>
+      <div class="sec-lbl">TV 대수</div>
+      <div class="g5">
+        <button class="btn" id="tc0" onclick="setTv(0)">없음</button>
+        <button class="btn on" id="tc1" onclick="setTv(1)">1대</button>
+        <button class="btn" id="tc2" onclick="setTv(2)">2대</button>
+        <button class="btn" id="tc3" onclick="setTv(3)">3대</button>
+        <button class="btn" id="tc4" onclick="setTv(4)">4대</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- 추가 옵션 아코디언 -->
+  <div class="opt-accordion">
+    <div class="opt-acc-hd" onclick="toggleAccordion()">
+      <div class="opt-acc-title">
+        <svg class="i18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
+        추가 옵션
+      </div>
+      <span class="opt-acc-chevron open" id="acc-arrow">
+        <svg class="i18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+      </span>
+    </div>
+    <div class="opt-acc-body open" id="acc-body">
+      <div class="g3" style="gap:8px">
+        <div class="opt-item" id="sm-toggle" onclick="toggleSM()">
+          <svg class="i18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+          <div class="opt-info">
+            <span class="opt-name" id="sm-txt">서비스매니저</span>
+            <span class="opt-desc" id="sm-sub">셋탑·출동비</span>
+          </div>
+        </div>
+        <div class="opt-item" id="giga2y-wrap" onclick="setGigaMode('2y')">
+          <svg class="i18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          <div class="opt-info">
+            <span class="opt-name">초고속2년이상</span>
+            <span class="opt-desc" id="giga2y-sub">해당 시 선택</span>
+          </div>
+        </div>
+        <div class="opt-item" id="gigaW2y-wrap" onclick="setGigaMode('within2y')">
+          <svg class="i18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          <div class="opt-info">
+            <span class="opt-name">초고속2년이내</span>
+            <span class="opt-desc" id="gigaW2y-sub">해당 시 선택</span>
+          </div>
+        </div>
+        <div class="opt-item" id="phone-toggle" onclick="togglePhone()" style="grid-column:1/-1">
+          <svg class="i18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.27h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-.76a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 17z"/></svg>
+          <div class="opt-info">
+            <span class="opt-name" id="phone-name">전화 추가</span>
+            <span class="opt-desc" id="phone-sub-lbl">SKB 인터넷전화</span>
+          </div>
+        </div>
+      </div>
+      <div class="opt-note" id="opt-note" style="display:none"></div>
+    </div>
+
+    <!-- 선납권 -->
+    <div id="seonap-area" style="display:none" class="expand-area">
+      <div class="expand-lbl">
+        <svg class="i14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2z"/></svg>
+        선납권 할인
+      </div>
+      <div class="csel-wrap">
+        <button class="csel-trigger" id="seonap-sel-trigger" onclick="openCsel('seonap-sel')">
+          <span id="seonap-sel-label">선납권 없음</span>
+          <span class="csel-arrow"><svg class="i14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span>
+        </button>
+      </div>
+      <div id="seonap-tbl-wrap" style="display:none;margin-top:8px">
+        <table class="seonap-tbl">
+          <thead><tr><th>항목</th><th>금액</th></tr></thead>
+          <tbody>
+            <tr><td>월 할인금액</td><td class="minus">-2,200원</td></tr>
+            <tr><td>적용 기간</td><td>12개월</td></tr>
+            <tr><td>총 할인금액</td><td class="minus">-26,400원</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 전화 요금제 -->
+    <div id="phone-sel-wrap" style="display:none" class="expand-area">
+      <div class="expand-lbl">
+        <svg class="i14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.27h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-.76a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 17z"/></svg>
+        전화 요금제
+      </div>
+      <div class="csel-wrap">
+        <button class="csel-trigger" id="phone-plan-trigger" onclick="openCsel('phone-plan')">
+          <span id="phone-plan-label">SKB 인터넷전화 (기본)</span>
+          <span class="csel-arrow"><svg class="i14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 상품 선택 카드 -->
+  <div class="prod-card">
+    <!-- 인터넷 -->
+    <div id="inet-sec" class="prod-sec">
+      <div class="prod-sec-hd">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
+        인터넷
+      </div>
+      <div class="csel-wrap">
+        <button class="csel-trigger placeholder" id="inet-plan-trigger" onclick="openCsel('inet-plan')">
+          <span id="inet-plan-label">요금제 선택</span>
+          <span class="csel-arrow"><svg class="i14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span>
+        </button>
+      </div>
+      <div class="subtot-row">
+        <span class="subtot-lbl">인터넷 월 요금</span>
+        <div style="display:flex;align-items:baseline;gap:2px">
+          <span class="subtot-val dim" id="inet-price">-</span>
+          <span class="subtot-unit">원</span>
+        </div>
+      </div>
+      <div id="inet-tag" style="display:none;margin-top:6px"></div>
+    </div>
+
+    <!-- TV -->
+    <div id="tv-sec" class="prod-sec">
+      <div class="prod-sec-hd">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><rect x="2" y="7" width="20" height="15" rx="2" ry="2"/><polyline points="17 2 12 7 7 2"/></svg>
+        TV
+      </div>
+      <div id="tv1-col"><div class="no-tv">TV 없음</div></div>
+      <div id="tv-extra"></div>
+    </div>
+  </div>
+
+  <!-- 미니 요약 -->
+  <div class="res-card">
+    <div class="sum-rows" style="padding:2px 16px 2px">
+      <div class="si" id="sum-inet-row">
+        <div class="si-l">
+          <svg class="i14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
+          <span class="si-key">인터넷</span>
+        </div>
+        <span class="si-val dim" id="sum-inet">미선택</span>
+      </div>
+      <div id="sum-tv-wrap"></div>
+      <div class="si" id="sum-seonap-row" style="display:none">
+        <div class="si-l">
+          <svg class="i14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2z"/></svg>
+          <span class="si-key">선납권 할인</span>
+        </div>
+        <span class="si-val minus" id="sum-seonap">-</span>
+      </div>
+      <div class="si" id="sum-phone-row" style="display:none">
+        <div class="si-l">
+          <svg class="i14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.27h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-.76a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 17z"/></svg>
+          <span class="si-key">전화</span><span class="si-plan" id="sum-phone-plan"></span>
+        </div>
+        <span class="si-val" id="sum-phone">-</span>
+      </div>
+      <div class="si" id="sum-gift-row" style="display:none">
+        <div class="si-l">
+          <svg class="i14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>
+          <span class="si-key" style="color:var(--p)">사은품</span>
+        </div>
+        <span class="si-val blue" id="sum-gift-val">-</span>
+      </div>
+    </div>
+    <div style="height:10px"></div>
+  </div>
+
+</div><!-- /pane-calc -->
+
+<!-- ══ TAB 2: 결과 & 문자 ══ -->
+<div class="tab-pane" id="pane-result">
+
+  <!-- 혜택 -->
+  <div class="res-card">
+    <div class="res-hd">
+      <svg class="i14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>
+      <span class="res-title">혜택 요약</span>
+    </div>
+    <div class="benefit-grid">
+      <div class="bx" id="gift-box">
+        <div class="bx-lbl">사은품</div>
+        <div class="bx-val dim" id="gift-val">-</div>
+        <div class="bx-sub" id="gift-sub">선택 후 표시</div>
+      </div>
+      <div class="bx" id="install-box">
+        <div class="bx-lbl">출동비</div>
+        <div class="bx-val dim" id="install-val">-</div>
+        <div class="bx-sub" id="install-sub">선택 후 표시</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 합계 -->
+  <div class="res-card">
+    <div class="res-hd">
+      <svg class="i14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+      <span class="res-title">월 납부 요금</span>
+      <div class="bdgs">
+        <span class="bdg" id="bdg-type2">요우결</span>
+        <span class="bdg" id="bdg-disc2" style="display:none"></span>
+        <span class="bdg" id="bdg-sm2" style="display:none">SM</span>
+        <span class="bdg" id="bdg-giga2" style="display:none">초고속2년+</span>
+      </div>
+    </div>
+    <div class="sum-rows">
+      <div class="si" id="sum-inet-row2">
+        <div class="si-l">
+          <svg class="i14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
+          <span class="si-key">인터넷</span><span class="si-plan" id="sum-inet-plan"></span>
+        </div>
+        <span class="si-val dim" id="sum-inet2">미선택</span>
+      </div>
+      <div id="sum-tv-wrap2"></div>
+      <div class="si" id="sum-seonap-row2" style="display:none">
+        <div class="si-l">
+          <svg class="i14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2z"/></svg>
+          <span class="si-key">선납권 할인</span><span class="si-plan">2,200원×12개월</span>
+        </div>
+        <span class="si-val minus" id="sum-seonap2">-</span>
+      </div>
+      <div class="si" id="sum-phone-row2" style="display:none">
+        <div class="si-l">
+          <svg class="i14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.27h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-.76a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 17z"/></svg>
+          <span class="si-key">전화</span><span class="si-plan" id="sum-phone-plan2"></span>
+        </div>
+        <span class="si-val" id="sum-phone2">-</span>
+      </div>
+    </div>
+    <div class="total-strip">
+      <span class="tl">월 납부액</span>
+      <span class="tv-amt" id="total-amount"><small>₩ </small>0<small>원</small></span>
+    </div>
+  </div>
+
+  <!-- 문자 -->
+  <div class="res-card">
+    <div class="res-hd">
+      <svg class="i14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+      <span class="res-title">고객 문자 전송</span>
+    </div>
+    <div class="sms-input-wrap">
+      <label class="sel-lbl">고객 전화번호</label>
+      <input type="tel" id="cust-phone" placeholder="010-0000-0000"
+        style="width:100%;padding:11px 14px;border:1.5px solid var(--bd);border-radius:10px;
+               font-family:inherit;font-size:13px;font-weight:600;color:var(--g900);
+               background:#fff;outline:none;transition:all .15s;"
+        oninput="formatPhone(this)"
+        onfocus="this.style.borderColor='var(--p)';this.style.boxShadow='0 0 0 3px rgba(37,99,235,.1)'"
+        onblur="this.style.borderColor='var(--bd)';this.style.boxShadow='none'">
+    </div>
+    <div class="sms-box" id="sms-box">안녕하세요 고객님
+방금 상담드린 SK브로드밴드 입니다.
+
+설계요금
+(요금 계산 탭에서 선택 후 자동 생성됩니다)
+
+감사합니다.</div>
+    <div class="sms-btns">
+      <button class="sms-btn sms-btn-copy" onclick="copySMS()">
+        <svg class="i14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        복사
+      </button>
+      <button class="sms-btn sms-btn-send" onclick="sendSMS()">
+        <svg class="i14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        문자발송
+      </button>
+    </div>
+    <div class="toast" id="toast">클립보드에 복사되었습니다</div>
+  </div>
+
+</div><!-- /pane-result -->
+</div><!-- /tab-content -->
+
+<!-- STICKY -->
+<div class="sticky" id="sticky-bar">
+  <div class="sticky-summary">
+    <div class="sticky-left">
+      <span class="sticky-lbl">월 납부액</span>
+      <span class="sticky-amt" id="sticky-amt">0원</span>
+      <span class="sticky-gift" id="sticky-gift" style="display:none"></span>
+    </div>
+  </div>
+  <button class="sticky-cta" onclick="switchTab('result')">
+    <svg class="i14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+    문자 만들기
+  </button>
+</div>
+
+<!-- 드롭다운 -->
+<div class="csel-overlay" id="csel-overlay" onclick="closeCsel()"></div>
+<div class="csel-panel" id="csel-panel">
+  <div class="csel-panel-head">
+    <span class="csel-panel-title" id="csel-panel-title">선택</span>
+    <button class="csel-panel-close" onclick="closeCsel()">✕</button>
+  </div>
+  <div class="csel-options" id="csel-options"></div>
+</div>
+
+<!-- ════ JS ════ -->
+<script>
+// ── 드롭다운
+const CSEL_DEFS = {
+  'inet-plan':{title:'인터넷 요금제',options:[{value:'',label:'선택하세요'},{value:'lite',label:'기가라이트인터넷 와이파이'},{value:'giga',label:'기가인터넷 와이파이'},{value:'lan',label:'광랜인터넷 와이파이'}],value:''},
+  'seonap-sel':{title:'선납권',options:[{value:'0',label:'선납권 없음'},{value:'2200',label:'선납권 적용 (2,200원 × 12개월)'}],value:'0'},
+  'phone-plan':{title:'전화 요금제',options:[{value:'skb1',label:'SKB 인터넷전화 (기본)'},{value:'skb2',label:'SKB 인터넷전화 (프리미엄)'}],value:'skb1'},
+};
+let _activeCsel=null;
+function openCsel(id){const def=CSEL_DEFS[id];if(!def)return;_activeCsel=id;$('csel-panel-title').textContent=def.title;$('csel-options').innerHTML=def.options.map(o=>`<div class="csel-option ${o.value===def.value?'selected':''}" onclick="selectCsel('${id}','${o.value}','${o.label.replace(/'/g,"\\'")}')">${o.label}</div>`).join('');$('csel-overlay').classList.add('open');$('csel-panel').classList.add('open');const t=$(id+'-trigger');if(t)t.classList.add('open');}
+function closeCsel(){if(_activeCsel){const t=$(_activeCsel+'-trigger');if(t)t.classList.remove('open');}$('csel-overlay').classList.remove('open');$('csel-panel').classList.remove('open');_activeCsel=null;}
+function selectCsel(id,value,label){if(CSEL_DEFS[id])CSEL_DEFS[id].value=value;const l=$(id+'-label');if(l){l.textContent=label;const t=$(id+'-trigger');if(t)t.classList.toggle('placeholder',value===''||value==='0');}closeCsel();calcAll();}
+function registerTVCsel(i){
+  const ti='tvp'+i,si='stb'+i;
+  CSEL_DEFS[ti]={title:'TV'+i+' 요금제',options:[{value:'',label:'선택하세요'},{value:'all',label:'ALL'},{value:'standard',label:'스탠다드'},{value:'economy',label:'이코노미'}],value:CSEL_DEFS[ti]?.value||''};
+  CSEL_DEFS[si]={title:'TV'+i+' 셋탑박스',options:S.sm?[{value:'',label:'선택하세요'},{value:'smart3',label:'Smart3 (0원)'},{value:'smart3mini',label:'Smart3미니 (4,400원)'},{value:'ai5',label:'AI5 (7,700원)'},{value:'air4',label:'Air4 (8,800원)'}]:[{value:'',label:'선택하세요'},{value:'smart3',label:'Smart3 (4,400원)'},{value:'ai5',label:'AI5 (7,700원)'},{value:'air4',label:'Air4 (8,800원)'}],value:CSEL_DEFS[si]?.value||''};
+}
+function cselVal(id){return CSEL_DEFS[id]?.value??'';}
+function makeCselHTML(id,ph){
+  const def=CSEL_DEFS[id];const val=def?.value||'';const lbl=def?.options.find(o=>o.value===val)?.label||ph;
+  return`<div class="csel-wrap"><button class="csel-trigger ${!val?'placeholder':''}" id="${id}-trigger" onclick="openCsel('${id}')"><span id="${id}-label">${lbl}</span><span class="csel-arrow"><svg class="i14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span></button></div>`;
+}
+</script>
+<script>
+// ── 데이터
+// 인터넷: solo=단독요금, ga=요가결요금 (인터넷 단독은 요우결 없음)
+// 인터넷+TV: u=요우결, ga=요가결, basic=solo요금
+const INET={
+  lite:{u:28600, ga:23100, basic:34100, solo:34100},
+  giga:{u:34100, ga:26400, basic:39600, solo:39600},
+  lan: {u:22000, ga:18700, basic:23100, solo:23100},
+};
+const TV={all:{u1:16500,ga1:15400,basic1:23100,solo1:23100,u2:9350,ga2:9350,basic2:23100,solo2:23100},standard:{u1:13200,ga1:12100,basic1:19800,solo1:19800,u2:7700,ga2:7700,basic2:19800,solo2:19800},economy:{u1:9900,ga1:8800,basic1:16500,solo1:16500,u2:6050,ga2:6050,basic2:16500,solo2:16500}};
+const STB={smart3:{lb:'Smart3',n1:4400,n2:2200,s1:0,s2:0},smart3mini:{lb:'Smart3미니',n1:4400,n2:2200,s1:4400,s2:2200},ai5:{lb:'AI5',n1:7700,n2:7700,s1:7700,s2:7700},air4:{lb:'Air4',n1:8800,n2:8800,s1:8800,s2:8800}};
+const PHONE_FEE={skb1:2200,skb2:3300};
+const INET_LB={lite:'기가라이트인터넷 와이파이',giga:'기가인터넷 와이파이',lan:'광랜인터넷 와이파이'};
+const TV_LB={all:'ALL',standard:'스탠다드',economy:'이코노미'};
+const PHONE_LB={skb1:'SKB 인터넷전화(기본)',skb2:'SKB 인터넷전화(프리미엄)'};
+const TV_DOTC=['','#2563EB','#6B7280','#374151','#111827'];
+
+// S.svc: 'inet' | 'both' | 'tv_only'
+// S.type: 'basic' | 'u' | 'ga'
+// S.gigaMode: 'none' | '2y' | 'within2y'
+//   none     = 초고속 미적용
+//   2y       = 초고속 2년이상
+//   within2y = 초고속 2년이내
+// TV만 요금 규칙:
+//   SM만            → TV2요금 (u1/u2), SM셋탑(s1/s2), 출동비 면제
+//   SM + 2년이상     → TV2요금 (u2 전체), SM셋탑(s1/s2), 출동비 면제
+//   SM + 2년이내     → TV1요금 (solo1 전체), 일반셋탑(n1/n2), 출동비 면제
+//   2년이상/이내만    → 기본 solo 요금, 일반셋탑, 출동비 청구
+let S={type:'u',discount:'none',svc:'both',sm:false,giga2y:false,gigaMode:'none',tvCount:1,phone:false};
+const fmt=n=>n.toLocaleString('ko-KR');
+const $=id=>document.getElementById(id);
+const setEl=(id,fn)=>{const el=$(id);if(el)fn(el);};
+
+let accOpen=true;
+function toggleAccordion(){accOpen=!accOpen;$('acc-body').classList.toggle('open',accOpen);$('acc-arrow').classList.toggle('open',accOpen);}
+
+function switchTab(t){
+  ['calc','result'].forEach(k=>{$('tab-'+k).classList.toggle('on',k===t);$('pane-'+k).classList.toggle('on',k===t);});
+  $('sticky-bar').classList.toggle('hidden',t==='result');
+}
+
+// ── 서비스 구성 (3종)
+function setSvc(v){
+  S.svc=v;
+  ['svc-inet','svc-both','svc-tv'].forEach(id=>$(id).classList.remove('on'));
+  if(v==='inet') $('svc-inet').classList.add('on');
+  else if(v==='both') $('svc-both').classList.add('on');
+  else $('svc-tv').classList.add('on');
+
+  const isInet=(v==='inet');
+  const isBoth=(v==='both');
+  const isTv=(v==='tv_only');
+
+  // 결합유형 섹션 전환
+  setEl('type-section',el=>el.style.display=isBoth?'block':'none');
+  setEl('type-section-inet',el=>el.style.display=isInet?'block':'none');
+
+  // TV대수: 인터넷만 → 숨김
+  setEl('tv-count-section',el=>el.style.display=isInet?'none':'block');
+  // TV만이 아닐 때 "없음" 버튼 복원
+  if(!isTv) setEl('tc0',el=>el.style.display='');
+
+  // 인터넷 섹션
+  setEl('inet-sec',el=>el.style.display=isTv?'none':'block');
+  setEl('sum-inet-row',el=>el.style.display=isTv?'none':'flex');
+  setEl('sum-inet-row2',el=>el.style.display=isTv?'none':'flex');
+  setEl('bdg-type2',el=>el.style.display=isBoth?'':'none');
+
+  // TV 섹션: 인터넷만 → 숨김
+  setEl('tv-sec',el=>el.style.display=isInet?'none':'block');
+
+  if(isInet){
+    S.tvCount=0;
+    S.giga2y=false;S.gigaMode='none';syncGiga();
+    $('disc-info').style.display='none';
+    // 인터넷 단독: 단독 버튼 기본 선택
+    S.type='basic';
+    ['btn-inet-solo','btn-inet-ga'].forEach(id=>{const el=$(id);if(el)el.classList.remove('on');});
+    $('btn-inet-solo')?.classList.add('on');
+  } else if(isTv){
+    S.type='basic'; // TV만은 결합유형 무관 → solo요금
+    // TV만 선택 시 항상 TV 1대 자동 선택, "없음" 버튼 숨김
+    S.tvCount=1;
+    for(let i=0;i<=4;i++)$('tc'+i).classList.toggle('on',i===1);
+    setEl('tc0',el=>el.style.display='none');
+    S.gigaMode='none';S.giga2y=false;
+    syncGiga();
+    $('seonap-area').style.display=S.sm?'block':'none';
+  } else {
+    // both
+    S.giga2y=false;S.gigaMode='none';syncGiga();
+    setEl('opt-note',el=>el.style.display='none');
+    if(S.tvCount===0){S.tvCount=1;for(let i=0;i<=4;i++)$('tc'+i).classList.toggle('on',i===1);}
+    // 인터넷+TV: 이전이 inet이었으면 요우결로 전환, 아니면 유지
+    if(S.svc==='inet'||S.type==='basic') S.type='u';
+    ['btn-basic','btn-u','btn-ga'].forEach(id=>{const el=$(id);if(el)el.classList.remove('on');});
+    const activeBtn='btn-'+(S.type==='basic'?'basic':S.type==='ga'?'ga':'u');
+    $(activeBtn)?.classList.add('on');
+  }
+  renderTV();calcAll();
+}
+
+// ── 결합유형 (basic/u/ga)
+function setType(t){
+  S.type=t;
+  // 인터넷+TV 버튼
+  ['btn-basic','btn-u','btn-ga'].forEach(id=>{const el=$(id);if(el)el.classList.remove('on');});
+  const bothBtn='btn-'+(t==='basic'?'basic':t==='ga'?'ga':'u');
+  $(bothBtn)?.classList.add('on');
+  // 인터넷 단독 버튼
+  ['btn-inet-solo','btn-inet-ga'].forEach(id=>{const el=$(id);if(el)el.classList.remove('on');});
+  if(t==='basic') $('btn-inet-solo')?.classList.add('on');
+  if(t==='ga') $('btn-inet-ga')?.classList.add('on');
+  // 배지
+  const lbl={basic:'기본',u:'요우결',ga:'요가결'}[t]||'';
+  const cls=t==='ga'?'bdg bdg-ga':'bdg';
+  setEl('bdg-type2',el=>{el.textContent=lbl;el.className=cls;});
+  calcAll();
+}
+
+// ── 할인구분
+function setDiscount(d){
+  S.discount=d;
+  ['disc-none','disc-baro','disc-fam'].forEach(id=>$(id).classList.remove('on'));
+  $('disc-'+d==='none'?'disc-none':d==='baro'?'disc-baro':'disc-fam').classList.add('on');
+  // 정확한 선택
+  if(d==='none') $('disc-none').classList.add('on');
+  else if(d==='baro') $('disc-baro').classList.add('on');
+  else $('disc-fam').classList.add('on');
+
+  const hintEl=$('disc-info');
+  const hints={none:'',baro:'바로할인 : 인터넷 기본료에서 할인 반영',fam:'패밀리 : 인터넷 단독 요금의 50%'};
+  if(d==='none'){hintEl.style.display='none';}
+  else{$('disc-hint-text').textContent=hints[d];hintEl.style.display='flex';}
+  const bdgMap={baro:'바로할인',fam:'패밀리'};
+  setEl('bdg-disc2',el=>{if(d!=='none'){el.textContent=bdgMap[d];el.style.display='';}else el.style.display='none';});
+  calcAll();
+}
+
+// ── TV 대수
+function setTv(n){
+  S.tvCount=n;
+  for(let i=0;i<=4;i++)$('tc'+i).classList.toggle('on',i===n);
+  renderTV();calcAll();
+}
+
+// ── SM
+function toggleSM(){S.sm=!S.sm;syncSM();syncGiga();renderTV();calcAll();}
+function syncSM(){
+  const isTv=S.svc==='tv_only';
+  $('sm-toggle').className=S.sm?'opt-item on-sm':'opt-item';
+  setEl('sm-sub',el=>el.textContent=S.sm&&isTv?'TV2요금·Smart3 0원·출동비면제':'셋탑·출동비');
+  $('seonap-area').style.display=(S.sm&&isTv)?'block':'none';
+  if(!S.sm){if(CSEL_DEFS['seonap-sel'])CSEL_DEFS['seonap-sel'].value='0';setEl('seonap-sel-label',el=>el.textContent='선납권 없음');setEl('seonap-tbl-wrap',el=>el.style.display='none');['sum-seonap-row','sum-seonap-row2'].forEach(id=>setEl(id,el=>el.style.display='none'));}
+  ['bdg-sm2'].forEach(id=>setEl(id,el=>el.style.display=S.sm?'':'none'));
+  updateOptNote();
+}
+
+// ── 초고속 (2년이상/2년이내 — 상호 배타, 같은 버튼 누르면 해제)
+function setGigaMode(mode){
+  if(S.svc!=='tv_only')return;
+  S.gigaMode=(S.gigaMode===mode)?'none':mode;
+  S.giga2y=(S.gigaMode==='2y');
+  syncGiga();calcAll();
+}
+function syncGiga(){
+  const locked=S.svc!=='tv_only';
+  // 2년이상 버튼
+  const w2=$('giga2y-wrap');
+  if(w2){
+    w2.style.opacity=locked?'.4':'1';
+    w2.style.pointerEvents=locked?'none':'auto';
+    w2.className=(S.gigaMode==='2y')?'opt-item on-teal':'opt-item';
+    setEl('giga2y-sub',el=>el.textContent=locked?'TV만 모드에서':'해당 시 선택');
+  }
+  // 2년이내 버튼
+  const ww=$('gigaW2y-wrap');
+  if(ww){
+    ww.style.opacity=locked?'.4':'1';
+    ww.style.pointerEvents=locked?'none':'auto';
+    ww.className=(S.gigaMode==='within2y')?'opt-item on-within2y':'opt-item';
+    setEl('gigaW2y-sub',el=>el.textContent=locked?'TV만 모드에서':'해당 시 선택');
+  }
+  // 배지
+  setEl('bdg-giga2',el=>{
+    if(S.gigaMode==='2y'){el.textContent='초고속2년+';el.style.display='';el.style.background='';el.style.color='';}
+    else if(S.gigaMode==='within2y'){el.textContent='초고속2년이내';el.style.display='';el.style.background='#FEF2F2';el.style.color='var(--red)';}
+    else{el.style.display='none';el.style.background='';el.style.color='';}
+  });
+  updateOptNote();
+}
+
+function updateOptNote(){
+  const isTv=S.svc==='tv_only';
+  const lines=[];
+  if(isTv){
+    if(S.sm&&S.gigaMode==='2y')        lines.push('SM + 초고속2년이상 → TV2요금(u2) · Smart3 0원 · 출동비 면제');
+    else if(S.sm&&S.gigaMode==='within2y') lines.push('SM + 초고속2년이내 → TV1요금(solo1) · 일반셋탑 · 출동비 면제');
+    else if(S.sm)                       lines.push('서비스매니저 → TV2요금 · Smart3 0원 · 출동비 면제');
+  } else {
+    if(S.sm) lines.push('서비스매니저 — 출동비 면제 · Smart3 0원');
+  }
+  const n=$('opt-note');
+  if(lines.length){n.innerHTML=lines.map(l=>`· ${l}`).join('<br>');n.style.display='block';}
+  else n.style.display='none';
+}
+
+// ── 전화
+function togglePhone(){
+  S.phone=!S.phone;
+  $('phone-toggle').className=S.phone?'opt-item on-phone':'opt-item';
+  $('phone-sel-wrap').style.display=S.phone?'block':'none';
+  if(!S.phone){['sum-phone-row','sum-phone-row2'].forEach(id=>setEl(id,el=>el.style.display='none'));}
+  calcAll();
+}
+
+// ── TV 렌더
+function renderTV(){
+  const tv1=$('tv1-col'),ext=$('tv-extra');
+  if(S.tvCount===0){tv1.innerHTML='<div class="no-tv">TV 없음</div>';ext.innerHTML='';return;}
+  for(let i=1;i<=S.tvCount;i++)registerTVCsel(i);
+  tv1.innerHTML=`
+    <div class="tv-g2">
+      <div><label class="sel-lbl">TV 요금제</label>${makeCselHTML('tvp1','선택하세요')}</div>
+      <div><label class="sel-lbl">셋탑박스</label>${makeCselHTML('stb1','선택하세요')}</div>
+    </div>
+    <div class="subtot-row"><span class="subtot-lbl">TV1 소계</span><div style="display:flex;align-items:baseline;gap:2px"><span class="subtot-val dim" id="tv1-tot">-</span><span class="subtot-unit">원</span></div></div>`;
+  let h='';
+  for(let i=2;i<=S.tvCount;i++){
+    h+=`<div class="tv-extra-item">
+      <div class="tv-extra-hd">
+        <div class="tv-dot-lbl"><div class="tv-dot" style="background:${TV_DOTC[i]}">${i}</div>TV${i}<span class="tv-sn">(TV2요금)</span></div>
+        <span class="tv-item-tot" id="tvtot${i}">-</span>
+      </div>
+      <div class="tv-g2">
+        <div><div class="tv-fl">TV 요금제</div>${makeCselHTML('tvp'+i,'선택')}</div>
+        <div><div class="tv-fl">셋탑박스</div>${makeCselHTML('stb'+i,'선택')}</div>
+      </div>
+      <div class="tv-g2" style="margin-top:6px">
+        <div><div class="tv-fl">TV요금</div><div class="tv-fv dim" id="tvf${i}">-</div></div>
+        <div><div class="tv-fl">셋탑요금</div><div class="tv-fv dim" id="sf${i}">-</div></div>
+      </div>
+    </div>`;
+  }
+  ext.innerHTML=h;
+}
+
+// ── 요금 계산
+function getBaroDC(){const tv1=cselVal('tvp1');const hi=(S.svc==='both')&&S.tvCount>0&&(tv1==='standard'||tv1==='all');return hi?13200:6600;}
+
+function getInetFee(pid){
+  const d=INET[pid];if(!d)return null;
+  if(S.discount==='fam')return Math.round(d.solo*0.5);
+  // 인터넷 단독: ga=요가결요금, basic=단독요금 (요우결 없음)
+  if(S.svc==='inet'){
+    const base=S.type==='ga'?d.ga:d.solo;
+    if(S.discount==='baro')return base-getBaroDC();
+    return base;
+  }
+  // 인터넷+TV: basic=solo, u/ga=결합요금
+  if(S.discount==='baro')return d[S.type==='basic'?'solo':S.type]-getBaroDC();
+  if(S.type==='basic')return d.solo;
+  return d[S.type];
+}
+
+function getTVFee(pid,isFirst){
+  const d=TV[pid];if(!d)return 0;
+  if(S.svc==='tv_only'){
+    // SM + 2년이내 → u1 (ALL16500/스탠다드13200/이코노미9900) 전 대수
+    if(S.sm&&S.gigaMode==='within2y') return d['u1']??0;
+    // SM만 or SM+2년이상 → u2 (ALL9350/스탠다드7700/이코노미6050) 전 대수
+    if(S.sm)                          return d['u2']??0;
+    // SM 없음 → 기본 solo
+    return d['solo'+(isFirst?'1':'2')]??0;
+  }
+  if(S.type==='basic') return d['solo'+(isFirst?'1':'2')]??0;
+  return d[S.type+(isFirst?'1':'2')]??0;
+}
+
+function getSTBFee(sid,isFirst){
+  const d=STB[sid];if(!d)return 0;
+  // SM + 2년이내 → 일반 셋탑임대료 (Smart3=4,400원)
+  if(S.sm&&S.svc==='tv_only'&&S.gigaMode==='within2y') return isFirst?d.n1:d.n2;
+  // SM만 or SM+2년이상 → SM 셋탑요금 (Smart3=0원)
+  if(S.sm&&S.svc==='tv_only') return isFirst?d.s1:d.s2;
+  return isFirst?d.n1:d.n2;
+}
+
+function calcGift(){
+  if(S.discount==='baro')return 0;
+  if(S.svc!=='both'||S.tvCount===0)return 0;
+  const ip=cselVal('inet-plan'),tp=cselVal('tvp1');
+  if(!ip||!tp)return 0;
+  if(ip==='lan')return tp==='economy'?250000:300000;
+  return tp==='all'?400000:tp==='standard'?350000:300000;
+}
+
+// ── 출동비 계산 (개선된 로직)
+// 인터넷만: 36,300원
+// 인터넷+TV: 34,100 + 22,000 + (TV추가대수 × 17,600)
+// TV만: 첫번째 34,100, 두번째부터 17,600
+// SM이면: 0원 (면제)
+function calcInstallFee(){
+  if(S.sm)return 0;
+  if(S.svc==='inet'){
+    const ip=cselVal('inet-plan');if(!ip)return 0;
+    return 36300;
+  }
+  if(S.svc==='both'){
+    const ip=cselVal('inet-plan');if(!ip)return 0;
+    if(S.tvCount===0)return 36300;
+    return 34100+22000+(S.tvCount-1)*17600;
+  }
+  if(S.svc==='tv_only'){
+    if(S.tvCount===0)return 0;
+    return 34100+(S.tvCount-1)*17600;
+  }
+  return 0;
+}
+
+function calcAll(){
+  let total=0;const smsLines=[];
+  const seonap=S.sm?parseInt(cselVal('seonap-sel')||'0'):0;
+  setEl('seonap-tbl-wrap',el=>el.style.display=(seonap>0&&S.sm)?'block':'none');
+  ['sum-seonap-row','sum-seonap-row2'].forEach(id=>setEl(id,el=>el.style.display='none'));
+
+  // 인터넷
+  if(S.svc!=='tv_only'){
+    const pid=cselVal('inet-plan');const fee=getInetFee(pid);
+    if(fee!==null){
+      setEl('inet-price',el=>{el.textContent=fmt(fee);el.className='subtot-val'+(S.discount==='baro'||S.discount==='fam'?' blue':'');});
+      const itag=$('inet-tag');
+      if(itag){
+        if(S.discount==='baro'){itag.innerHTML=`<span class="dc-tag"><svg style="width:11px;height:11px;stroke-width:2" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> 바로할인 ${fmt(getBaroDC())}원 적용</span>`;itag.style.display='block';}
+        else if(S.discount==='fam'){itag.innerHTML=`<span class="dc-tag"><svg style="width:11px;height:11px;stroke-width:2" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg> 단독 ${fmt(INET[pid].solo)}원 → 50%</span>`;itag.style.display='block';}
+        else itag.style.display='none';
+      }
+      const cls='si-val'+(S.discount!=='none'?' blue':'');
+      ['sum-inet','sum-inet2'].forEach(id=>setEl(id,el=>{el.textContent=fmt(fee)+'원';el.className=cls;}));
+      setEl('sum-inet-plan',el=>el.textContent=INET_LB[pid]||'');
+      total+=fee;smsLines.push(`인터넷 ${INET_LB[pid]} : ${fmt(fee)}원`);
+    } else {
+      setEl('inet-price',el=>{el.textContent='-';el.className='subtot-val dim';});
+      setEl('inet-tag',el=>el.style.display='none');
+      ['sum-inet','sum-inet2'].forEach(id=>setEl(id,el=>{el.textContent='미선택';el.className='si-val dim';}));
+      setEl('sum-inet-plan',el=>el.textContent='');
+    }
+  }
+
+  // TV
+  let tvTotal=0,sumTvHtml='',sumTvHtml2='';
+  for(let i=1;i<=S.tvCount;i++){
+    const isFirst=(i===1);
+    const tpVal=cselVal(i===1?'tvp1':'tvp'+i),sVal=cselVal(i===1?'stb1':'stb'+i);
+    const tvFee=getTVFee(tpVal,isFirst),stbFee=getSTBFee(sVal,isFirst);
+    const tot=tvFee+stbFee;tvTotal+=tot;
+    if(i===1){setEl('tv1-tot',el=>{el.textContent=(tpVal||sVal)?fmt(tot):'-';el.className='subtot-val'+(tpVal||sVal?'':' dim');});}
+    else{setEl('tvf'+i,el=>{el.textContent=tpVal?fmt(tvFee):'-';el.className='tv-fv'+(tpVal?'':' dim');});setEl('sf'+i,el=>{el.textContent=sVal?fmt(stbFee):'-';el.className='tv-fv'+(sVal?'':' dim');});setEl('tvtot'+i,el=>el.textContent=(tpVal||sVal)?fmt(tot)+'원':'-');}
+    const tvLb=TV_LB[tpVal]||'-',stbLb=STB[sVal]?.lb||'-',hasSel=!!(tpVal||sVal);
+    const tvSvg=`<svg style="width:13px;height:13px;stroke-width:2;flex-shrink:0" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="2" y="7" width="20" height="15" rx="2"/><polyline points="17 2 12 7 7 2"/></svg>`;
+    const siHtml=`<div class="si"><div class="si-l">${tvSvg}<span class="si-key">TV ${i}대</span><span class="si-plan">${hasSel?tvLb+' · '+stbLb:''}</span></div><span class="si-val ${hasSel?'':'dim'}">${hasSel?fmt(tot)+'원':'-'}</span></div>`;
+    sumTvHtml+=siHtml;sumTvHtml2+=siHtml;
+    if(hasSel)smsLines.push(`TV${i} ${tvLb} / ${stbLb} : ${fmt(tot)}원`);
+  }
+  setEl('sum-tv-wrap',el=>el.innerHTML=sumTvHtml);
+  setEl('sum-tv-wrap2',el=>el.innerHTML=sumTvHtml2);
+  if(S.tvCount>0)total+=tvTotal;
+
+  // 선납권
+  if(S.sm&&seonap>0){
+    ['sum-seonap-row','sum-seonap-row2'].forEach(id=>setEl(id,el=>el.style.display='flex'));
+    ['sum-seonap','sum-seonap2'].forEach(id=>setEl(id,el=>el.textContent='-'+fmt(seonap)+'원/월'));
+    total-=seonap;smsLines.push(`선납권 할인 : -${fmt(seonap)}원/월`);
+  }
+
+  // 전화
+  if(S.phone){
+    const pid2=cselVal('phone-plan'),pf=PHONE_FEE[pid2]||0;
+    ['sum-phone','sum-phone2'].forEach(id=>setEl(id,el=>el.textContent=fmt(pf)+'원'));
+    ['sum-phone-plan','sum-phone-plan2'].forEach(id=>setEl(id,el=>el.textContent=PHONE_LB[pid2]||''));
+    ['sum-phone-row','sum-phone-row2'].forEach(id=>setEl(id,el=>el.style.display='flex'));
+    total+=pf;smsLines.push(`전화 ${PHONE_LB[pid2]} : ${fmt(pf)}원`);
+    setEl('phone-sub-lbl',el=>el.textContent=PHONE_LB[pid2]||'SKB 인터넷전화');
+  } else {
+    ['sum-phone-row','sum-phone-row2'].forEach(id=>setEl(id,el=>el.style.display='none'));
+  }
+
+  const gift=calcGift();
+  const sgrow=$('sum-gift-row');
+  if(sgrow){if(gift>0&&S.discount!=='baro'){sgrow.style.display='flex';setEl('sum-gift-val',el=>el.textContent=fmt(gift)+'원');}else sgrow.style.display='none';}
+
+  setEl('total-amount',el=>el.innerHTML=`<small>₩ </small>${fmt(total)}<small>원</small>`);
+  setEl('total-badge',el=>el.textContent=total>0?fmt(total)+'원':'0원');
+  setEl('hdr-amt',el=>el.textContent='월 '+fmt(total)+'원');
+  setEl('sticky-amt',el=>el.textContent=fmt(total)+'원');
+
+  const sg=$('sticky-gift');
+  if(sg){if(gift>0&&S.discount!=='baro'){sg.textContent='사은품 '+fmt(gift)+'원';sg.style.display='inline-block';}else sg.style.display='none';}
+
+  updateBenefit();
+  buildSMS(smsLines,total);
+}
+
+function updateBenefit(){
+  const gift=calcGift();
+  const gv=$('gift-val'),gs=$('gift-sub'),gb=$('gift-box');
+  if(S.discount==='baro'){gv.textContent='-';gv.className='bx-val dim';gs.textContent='바로할인 시 미제공';gb.className='bx';}
+  else if(gift>0){gv.textContent=fmt(gift)+'원';gv.className='bx-val';gs.textContent='상품권/현금';gb.className='bx active';}
+  else{gv.textContent='-';gv.className='bx-val dim';gs.textContent='인터넷+TV 선택 후';gb.className='bx';}
+
+  const iBox=$('install-box'),iv=$('install-val'),isub=$('install-sub');
+  const fee=calcInstallFee();
+  if(S.sm){
+    iv.textContent='면제';iv.className='bx-val';
+    const raw=S.svc==='inet'?36300:S.svc==='both'?(S.tvCount===0?36300:34100+22000+(S.tvCount-1)*17600):(S.tvCount===0?0:34100+(S.tvCount-1)*17600);
+    isub.textContent=raw>0?`혜택 ${fmt(raw)}원`:'출동비 면제';
+    iBox.className='bx active';
+  } else {
+    const ip=cselVal(S.svc!=='tv_only'?'inet-plan':'tvp1');
+    if(fee>0){iv.textContent=fmt(fee)+'원';iv.className='bx-val';isub.textContent=S.svc==='inet'?'인터넷 단독':S.svc==='both'?`인터넷+TV ${S.tvCount}대`:`TV ${S.tvCount}대`;iBox.className='bx active';}
+    else{iv.textContent='-';iv.className='bx-val dim';isub.textContent='요금제 선택 후';iBox.className='bx';}
+  }
+}
+
+function buildSMS(lines,total){
+  if(!lines.length){$('sms-box').textContent='안녕하세요 고객님\n방금 상담드린 SK브로드밴드입니다.\n\n설계요금\n(요금 계산 탭에서 선택 후 자동 생성됩니다)\n\n감사합니다.';return;}
+  const isBoth=S.svc==='both',isTvOnly=S.svc==='tv_only',isInet=S.svc==='inet';
+  const ip=cselVal('inet-plan');
+  const sep='─────────────────';
+
+  // 가입 상품
+  let pl=[];
+  if(!isTvOnly&&ip)pl.push(`  인터넷 : ${INET_LB[ip]||''}`);
+  for(let i=1;i<=S.tvCount;i++){
+    const tp=cselVal(i===1?'tvp1':'tvp'+i),sp=cselVal(i===1?'stb1':'stb'+i);
+    if(tp||sp)pl.push(`  BTV${i===1?'':i} : ${TV_LB[tp]||'-'} / ${STB[sp]?.lb||'-'}`);
+  }
+  if(S.phone){const pp=cselVal('phone-plan');pl.push(`  전화 : ${PHONE_LB[pp]||''}`);}
+
+  // 월 요금
+  let fl=[];
+  if(!isTvOnly&&ip){
+    const fee=getInetFee(ip);
+    if(fee!==null){
+      let fs=`  인터넷 : ${fmt(fee)}원`;
+      if(S.discount==='baro')fs+=` (바로할인 ${fmt(getBaroDC())}원 적용)`;
+      else if(S.discount==='fam')fs+=` (패밀리 50% 적용)`;
+      fl.push(fs);
+    }
+  }
+  for(let i=1;i<=S.tvCount;i++){
+    const tp=cselVal(i===1?'tvp1':'tvp'+i),sp=cselVal(i===1?'stb1':'stb'+i);
+    if(!tp&&!sp)continue;
+    const tvf=getTVFee(tp,i===1),sf=getSTBFee(sp,i===1);
+    let tl=`  BTV${i===1?'':i} : ${fmt(tvf+sf)}원`;
+    if(isTvOnly&&i===1&&tp){
+      if(S.sm&&S.gigaMode==='within2y'){
+        const s0=TV[tp]?.u2||0,df=TV[tp]?.u1||s0;
+        if(s0!==df)tl+=`\n  (SM BTV 할인요금 ${fmt(s0)}원 → 초고속2년이내 ${fmt(df)}원)`;
+      } else if(S.sm){
+        const s0=TV[tp]?.solo1||0,df=TV[tp]?.u2||s0;
+        if(s0!==df)tl+=`\n  (일반 ${fmt(s0)}원 → 서비스매니저 BTV 할인요금 ${fmt(df)}원)`;
+      }
+    }
+    fl.push(tl);
+  }
+  if(S.phone){const pp=cselVal('phone-plan');fl.push(`  전화 : ${fmt(PHONE_FEE[pp]||0)}원`);}
+  if(S.sm&&cselVal('seonap-sel')!=='0')fl.push(`  한번더 할인 : -2,200원/월 (12개월간)`);
+
+  // 바로할인 혜택
+  let bs='';
+  if(S.discount==='baro'){
+    const dc=getBaroDC(),ib=calcInstallFee();
+    bs=`\n[ 바로할인 혜택 ]\n  인터넷 할인 : ${fmt(dc)}원 × 36개월 = ${fmt(dc*36)}원`;
+    if(ib>0)bs+=`\n  출동비 혜택 : ${fmt(ib)}원\n  총 혜택금액 : ${fmt(dc*36+ib)}원`;
+  }
+
+  // 사은품
+  let gs2='';
+  if(S.discount!=='baro'){const g=calcGift();if(g>0)gs2=`\n[ 사은품 ]\n  ${fmt(g)}원 상당`;}
+
+  // 서비스매니저 혜택
+  let smTxt='';
+  if(S.sm&&isTvOnly&&S.gigaMode==='within2y'){
+    smTxt='\n[ 서비스매니저 혜택 ]\n  출동비 34,100 면제\n  BTV 할인요금 적용 (초고속 2년이내)';
+  } else if(S.sm&&isTvOnly){
+    smTxt='\n[ 서비스매니저 혜택 ]\n  출동비 34,100 면제\n  Smart3 셋탑임대료 0원\n  BTV 할인요금 적용';
+    if(S.gigaMode==='2y')smTxt+='\n  초고속 2년이상 적용';
+  } else if(S.sm){
+    smTxt='\n[ 서비스매니저 혜택 ]\n  출동비 34,100 면제\n  Smart3 셋탑임대료 0원';
+  }
+
+  // 약정
+  const cl=S.discount==='baro'
+    ?'  3년 약정 (기간 내 해지 시 할인반환금 청구)'
+    :'  3년 약정 (기간 내 해지 시 할인반환금 청구)\n  단, 1년 이내 해지 시 사은품 추가 할인반환금 청구';
+
+  // 가족결합
+  let gaSection='';
+  if(S.type==='ga'){
+    const isLan=ip==='lan';
+    gaSection=`\n[ 가족결합 SKT 핸드폰 기본료 할인 ]\n  1회선 : 3,500원\n  2회선 : 7,000원\n  3회선 : 18,000원\n  4~5회선 : 24,000원`;
+    if(isLan)gaSection+=`\n  ※ 광랜(100M) 결합 시 최대 18,000원`;
+    gaSection+=`\n\n[ 알뜰한결합 안내 ]\n  SK7모바일, 리브모바일, 토스모바일,\n  이야기모바일, 모빙, 스마텔, 아이즈모바일, 티플러스\n  핸드폰 기본료 할인 미적용\n  SK브로드밴드 인터넷 할인율만 적용`;
+  }
+
+  let msg='안녕하세요 고객님\n방금 상담 드린 SK브로드밴드입니다.\n\n';
+  msg+=`${sep}\n[ 가입 상품 ]\n${pl.join('\n')}\n\n[ 월 요금 ]\n${fl.join('\n')}\n${sep}\n월 납부액 : ${fmt(total)}원 VAT포함\n${sep}\n\n[ 약정 안내 ]\n${cl}`;
+  if(bs)msg+='\n\n'+bs;
+  if(gs2)msg+='\n\n'+gs2;
+  if(smTxt)msg+='\n\n'+smTxt;
+  if(gaSection)msg+='\n\n'+gaSection;
+  msg+='\n\n감사합니다.';
+  $('sms-box').textContent=msg;
+}
+
+function formatPhone(el){let v=el.value.replace(/\D/g,'');if(v.length<=3)el.value=v;else if(v.length<=7)el.value=v.slice(0,3)+'-'+v.slice(3);else el.value=v.slice(0,3)+'-'+v.slice(3,7)+'-'+v.slice(7,11);}
+function sendSMS(){const p=($('cust-phone')?.value||'').replace(/\D/g,'');const t=$('sms-box').textContent;if(!p){alert('고객 전화번호를 먼저 입력해 주세요.');return;}window.location.href='sms:'+p+'?body='+encodeURIComponent(t);}
+function copySMS(){const t=$('sms-box').textContent;const done=()=>{const x=$('toast');x.classList.add('show');setTimeout(()=>x.classList.remove('show'),2200);};navigator.clipboard?.writeText(t).then(done).catch(()=>{const ta=document.createElement('textarea');ta.value=t;ta.style.cssText='position:fixed;opacity:0';document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);done();});}
+
+let _dp=null;
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();_dp=e;if(!localStorage.getItem('pwa-dismissed'))$('install-banner').style.display='flex';});
+window.addEventListener('appinstalled',()=>{$('install-banner').style.display='none';_dp=null;});
+function installPWA(){if(_dp){_dp.prompt();_dp.userChoice.then(()=>{_dp=null;$('install-banner').style.display='none';});}else alert('Safari에서:\n아래 공유 버튼(□↑) → "홈 화면에 추가" 를 탭하세요.');}
+function dismissBanner(){$('install-banner').style.display='none';localStorage.setItem('pwa-dismissed','1');}
+if(window.navigator.standalone)$('install-banner')&&($('install-banner').style.display='none');
+
+// 초기화
+setSvc('both');
+document.addEventListener('input',e=>{if(e.target.tagName==='SELECT')calcAll();});
+</script>
+</body>
+</html>

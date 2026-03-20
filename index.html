@@ -730,7 +730,9 @@ function selectCsel(id,value,label){if(CSEL_DEFS[id])CSEL_DEFS[id].value=value;c
 function registerTVCsel(i){
   const ti='tvp'+i,si='stb'+i;
   CSEL_DEFS[ti]={title:'TV'+i+' 요금제',options:[{value:'',label:'선택하세요'},{value:'all',label:'ALL'},{value:'standard',label:'스탠다드'},{value:'economy',label:'이코노미'}],value:CSEL_DEFS[ti]?.value||''};
-  CSEL_DEFS[si]={title:'TV'+i+' 셋탑박스',options:S.sm?[{value:'',label:'선택하세요'},{value:'smart3',label:'Smart3 (0원)'},{value:'smart3mini',label:'Smart3미니 (4,400원)'},{value:'ai5',label:'AI5 (7,700원)'},{value:'air4',label:'Air4 (8,800원)'}]:[{value:'',label:'선택하세요'},{value:'smart3',label:'Smart3 (4,400원)'},{value:'ai5',label:'AI5 (7,700원)'},{value:'air4',label:'Air4 (8,800원)'}],value:CSEL_DEFS[si]?.value||''};
+  // SM 셋탑 혜택: TV만 모드이거나, 인터넷+TV에서 TV2번째부터만 적용
+  const smStb = S.sm && (S.svc==='tv_only' || i>=2);
+  CSEL_DEFS[si]={title:'TV'+i+' 셋탑박스',options:smStb?[{value:'',label:'선택하세요'},{value:'smart3',label:'Smart3 (0원)'},{value:'smart3mini',label:'Smart3미니 (4,400원)'},{value:'ai5',label:'AI5 (7,700원)'},{value:'air4',label:'Air4 (8,800원)'}]:[{value:'',label:'선택하세요'},{value:'smart3',label:'Smart3 (4,400원)'},{value:'ai5',label:'AI5 (7,700원)'},{value:'air4',label:'Air4 (8,800원)'}],value:CSEL_DEFS[si]?.value||''};
 }
 function cselVal(id){return CSEL_DEFS[id]?.value??'';}
 function makeCselHTML(id,ph){
@@ -1095,10 +1097,12 @@ function getSTBFee(sid,isFirst,tvIdx){
   const saleOkStb=sl&&sl.on&&sl.product!=='none';
   // 판매장비 선택 시 → SM 셋탑 무시, 일반요금 적용
   if(saleOkStb) return isFirst?d.n1:d.n2;
-  // SM + 2년이내 → 일반 셋탑임대료
+  // 인터넷+TV 모드 TV1 → SM 무관 일반요금
+  if(S.svc==='both'&&idx===1) return d.n1;
+  // SM + 2년이내 (TV만) → 일반 셋탑임대료
   if(S.sm&&S.svc==='tv_only'&&S.gigaMode==='within2y') return isFirst?d.n1:d.n2;
-  // SM만 or SM+2년이상 → SM 셋탑요금 (Smart3=0원)
-  if(S.sm&&S.svc==='tv_only') return isFirst?d.s1:d.s2;
+  // SM (TV만, TV2+) → SM 셋탑요금 (Smart3=0원)
+  if(S.sm&&(S.svc==='tv_only'||idx>=2)) return isFirst?d.s1:d.s2;
   return isFirst?d.n1:d.n2;
 }
 

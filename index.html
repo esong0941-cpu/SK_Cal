@@ -12,7 +12,7 @@
 <link rel="manifest" href="manifest.json">
 <script>
 if('serviceWorker' in navigator){
-  const swCode=`const CACHE='skb-v12';const ASSETS=['/','/index.html','/manifest.json','/icon-192.png','/icon-512.png'];self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS).catch(()=>{})));self.skipWaiting();});self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))));self.clients.claim();});self.addEventListener('fetch',e=>{e.respondWith(fetch(e.request).catch(()=>caches.match(e.request)));});`;
+  const swCode=`const CACHE='skb-v6';const ASSETS=['/','/index.html','/manifest.json','/icon-192(1).png','/icon-512(1).png'];self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS).catch(()=>{})));self.skipWaiting();});self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))));self.clients.claim();});self.addEventListener('fetch',e=>{e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request)));});`;
   const b=new Blob([swCode],{type:'application/javascript'});
   navigator.serviceWorker.register(URL.createObjectURL(b)).catch(()=>{});
 }
@@ -100,8 +100,7 @@ svg{display:inline-block;vertical-align:middle;flex-shrink:0}
   box-shadow:0 3px 10px rgba(37,99,235,.3);
 }
 .btn.on svg{stroke:#fff}
-.btn:disabled{opacity:.35;cursor:not-allowed;pointer-events:none}
-.btn:disabled.on{background:var(--g100);color:var(--g500);box-shadow:none}
+.btn.on .btn-sub{color:rgba(255,255,255,.7)}
 
 /* 그리드 */
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:7px}
@@ -134,9 +133,13 @@ svg{display:inline-block;vertical-align:middle;flex-shrink:0}
 .opt-item.on-sm,.opt-item.on-teal,.opt-item.on-phone{
   background:var(--p);box-shadow:0 3px 10px rgba(37,99,235,.3);
 }
+.opt-item.on-within2y{background:#F59E0B;box-shadow:0 3px 10px rgba(245,158,11,.3);}
 .opt-item.on-sm svg,.opt-item.on-teal svg,.opt-item.on-phone svg{stroke:#fff}
+.opt-item.on-within2y svg{stroke:#fff}
 .opt-item.on-sm .opt-name,.opt-item.on-teal .opt-name,.opt-item.on-phone .opt-name{color:#fff}
+.opt-item.on-within2y .opt-name{color:#fff}
 .opt-item.on-sm .opt-desc,.opt-item.on-teal .opt-desc,.opt-item.on-phone .opt-desc{color:rgba(255,255,255,.7)}
+.opt-item.on-within2y .opt-desc{color:rgba(255,255,255,.8)}
 
 .opt-note{margin-top:10px;padding:8px 12px;background:var(--p-bg);border-radius:10px;font-size:10px;color:var(--p);line-height:1.6}
 
@@ -416,19 +419,26 @@ svg{display:inline-block;vertical-align:middle;flex-shrink:0}
       </span>
     </div>
     <div class="opt-acc-body open" id="acc-body">
-      <div class="g2" style="gap:8px">
+      <div class="g3" style="gap:8px">
         <div class="opt-item" id="sm-toggle" onclick="toggleSM()">
           <svg class="i18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
           <div class="opt-info">
             <span class="opt-name" id="sm-txt">서비스매니저</span>
-            <span class="opt-desc">셋탑·TV2요금</span>
+            <span class="opt-desc" id="sm-sub">셋탑·출동비</span>
           </div>
         </div>
-        <div class="opt-item" id="giga-wrap" onclick="toggleGiga()">
+        <div class="opt-item" id="giga2y-wrap" onclick="setGigaMode('2y')">
           <svg class="i18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
           <div class="opt-info">
-            <span class="opt-name" id="giga-txt">초고속 2년이상</span>
-            <span class="opt-desc" id="giga-sub">TV만 모드에서 사용</span>
+            <span class="opt-name">초고속2년이상</span>
+            <span class="opt-desc" id="giga2y-sub">해당 시 선택</span>
+          </div>
+        </div>
+        <div class="opt-item" id="gigaW2y-wrap" onclick="setGigaMode('within2y')">
+          <svg class="i18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          <div class="opt-info">
+            <span class="opt-name">초고속2년이내</span>
+            <span class="opt-desc" id="gigaW2y-sub">해당 시 선택</span>
           </div>
         </div>
         <div class="opt-item" id="phone-toggle" onclick="togglePhone()" style="grid-column:1/-1">
@@ -625,20 +635,29 @@ svg{display:inline-block;vertical-align:middle;flex-shrink:0}
       <svg class="i14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
       <span class="res-title">고객 문자 전송</span>
     </div>
-    <div class="sms-input-wrap">
-      <!-- 발신자 번호 (저장됨) -->
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-        <label class="sel-lbl" style="margin-bottom:0">내 번호 (발신자)</label>
-        <button onclick="saveMyPhone()" style="font-size:10px;font-weight:700;color:var(--p);background:var(--p-bg);border:none;border-radius:6px;padding:3px 8px;cursor:pointer;font-family:inherit">저장</button>
+    <!-- 내 정보 저장 -->
+    <div style="padding:12px 16px 0;border-bottom:1px solid var(--bd);margin-bottom:2px">
+      <div style="font-size:10px;font-weight:700;color:var(--g400);margin-bottom:8px;display:flex;align-items:center;justify-content:space-between">
+        <span>내 정보 (저장됨)</span>
+        <button onclick="saveRepInfo()" style="border:none;background:var(--p);color:#fff;font-family:inherit;font-size:10px;font-weight:700;padding:4px 10px;border-radius:6px;cursor:pointer">저장</button>
       </div>
-      <input type="tel" id="my-phone" placeholder="내 번호 입력 후 저장"
-        style="width:100%;padding:9px 14px;border:1.5px solid var(--bd);border-radius:10px;
-               font-family:inherit;font-size:12px;font-weight:600;color:var(--g700);
-               background:var(--g100);outline:none;transition:all .15s;margin-bottom:10px;"
-        oninput="formatPhone(this)"
-        onfocus="this.style.borderColor='var(--p)';this.style.boxShadow='0 0 0 3px rgba(37,99,235,.1)';this.style.background='#fff'"
-        onblur="this.style.borderColor='var(--bd)';this.style.boxShadow='none';this.style.background='var(--g100)'">
-      <!-- 고객 번호 -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
+        <div>
+          <div style="font-size:10px;color:var(--g400);margin-bottom:4px">이름</div>
+          <input type="text" id="rep-name" placeholder="홍길동"
+            style="width:100%;padding:9px 12px;border:1.5px solid var(--bd);border-radius:8px;font-family:inherit;font-size:13px;font-weight:600;color:var(--g900);background:#fff;outline:none"
+            onfocus="this.style.borderColor='var(--p)'" onblur="this.style.borderColor='var(--bd)'">
+        </div>
+        <div>
+          <div style="font-size:10px;color:var(--g400);margin-bottom:4px">연락처</div>
+          <input type="tel" id="rep-phone" placeholder="010-0000-0000"
+            style="width:100%;padding:9px 12px;border:1.5px solid var(--bd);border-radius:8px;font-family:inherit;font-size:13px;font-weight:600;color:var(--g900);background:#fff;outline:none"
+            oninput="formatPhone(this)"
+            onfocus="this.style.borderColor='var(--p)'" onblur="this.style.borderColor='var(--bd)'">
+        </div>
+      </div>
+    </div>
+    <div class="sms-input-wrap">
       <label class="sel-lbl">고객 전화번호</label>
       <input type="tel" id="cust-phone" placeholder="010-0000-0000"
         style="width:100%;padding:11px 14px;border:1.5px solid var(--bd);border-radius:10px;
@@ -711,9 +730,7 @@ function selectCsel(id,value,label){if(CSEL_DEFS[id])CSEL_DEFS[id].value=value;c
 function registerTVCsel(i){
   const ti='tvp'+i,si='stb'+i;
   CSEL_DEFS[ti]={title:'TV'+i+' 요금제',options:[{value:'',label:'선택하세요'},{value:'all',label:'ALL'},{value:'standard',label:'스탠다드'},{value:'economy',label:'이코노미'}],value:CSEL_DEFS[ti]?.value||''};
-  // Smart3 0원: TV만+SM 조합에서만 / 인터넷+TV+SM이면 정상 4,400원
-  const smTvOnly = S.sm&&S.svc==='tv_only';
-  CSEL_DEFS[si]={title:'TV'+i+' 셋탑박스',options:smTvOnly?[{value:'',label:'선택하세요'},{value:'smart3',label:'Smart3 (0원)'},{value:'smart3mini',label:'Smart3미니 (4,400원)'},{value:'ai5',label:'AI5 (7,700원)'},{value:'air4',label:'Air4 (8,800원)'}]:[{value:'',label:'선택하세요'},{value:'smart3',label:'Smart3 (4,400원)'},{value:'ai5',label:'AI5 (7,700원)'},{value:'air4',label:'Air4 (8,800원)'}],value:CSEL_DEFS[si]?.value||''};
+  CSEL_DEFS[si]={title:'TV'+i+' 셋탑박스',options:S.sm?[{value:'',label:'선택하세요'},{value:'smart3',label:'Smart3 (0원)'},{value:'smart3mini',label:'Smart3미니 (4,400원)'},{value:'ai5',label:'AI5 (7,700원)'},{value:'air4',label:'Air4 (8,800원)'}]:[{value:'',label:'선택하세요'},{value:'smart3',label:'Smart3 (4,400원)'},{value:'ai5',label:'AI5 (7,700원)'},{value:'air4',label:'Air4 (8,800원)'}],value:CSEL_DEFS[si]?.value||''};
 }
 function cselVal(id){return CSEL_DEFS[id]?.value??'';}
 function makeCselHTML(id,ph){
@@ -740,7 +757,16 @@ const TV_DOTC=['','#2563EB','#6B7280','#374151','#111827'];
 
 // S.svc: 'inet' | 'both' | 'tv_only'
 // S.type: 'basic' | 'u' | 'ga'
-let S={type:'u',discount:'none',svc:'both',sm:false,giga2y:false,tvCount:1,phone:false};
+// S.gigaMode: 'none' | '2y' | 'within2y'
+//   none     = 초고속 미적용
+//   2y       = 초고속 2년이상
+//   within2y = 초고속 2년이내
+// TV만 요금 규칙:
+//   SM만            → TV2요금 (u1/u2), SM셋탑(s1/s2), 출동비 면제
+//   SM + 2년이상     → TV2요금 (u2 전체), SM셋탑(s1/s2), 출동비 면제
+//   SM + 2년이내     → TV1요금 (solo1 전체), 일반셋탑(n1/n2), 출동비 면제
+//   2년이상/이내만    → 기본 solo 요금, 일반셋탑, 출동비 청구
+let S={type:'u',discount:'none',svc:'both',sm:false,giga2y:false,gigaMode:'none',tvCount:1,phone:false};
 const fmt=n=>n.toLocaleString('ko-KR');
 const $=id=>document.getElementById(id);
 const setEl=(id,fn)=>{const el=$(id);if(el)fn(el);};
@@ -771,6 +797,8 @@ function setSvc(v){
 
   // TV대수: 인터넷만 → 숨김
   setEl('tv-count-section',el=>el.style.display=isInet?'none':'block');
+  // TV만이 아닐 때 "없음" 버튼 복원
+  if(!isTv) setEl('tc0',el=>el.style.display='');
 
   // 인터넷 섹션
   setEl('inet-sec',el=>el.style.display=isTv?'none':'block');
@@ -783,31 +811,31 @@ function setSvc(v){
 
   if(isInet){
     S.tvCount=0;
-    S.giga2y=false;syncGiga();
+    S.giga2y=false;S.gigaMode='none';syncGiga();
     $('disc-info').style.display='none';
+    // 인터넷 단독: 단독 버튼 기본 선택
     S.type='basic';
     ['btn-inet-solo','btn-inet-ga'].forEach(id=>{const el=$(id);if(el)el.classList.remove('on');});
     $('btn-inet-solo')?.classList.add('on');
-    setEl('disc-baro',el=>el.disabled=false); // 바로할인 활성화
   } else if(isTv){
-    S.type='basic';
-    if(S.tvCount===0){S.tvCount=1;for(let i=0;i<=4;i++)$('tc'+i).classList.toggle('on',i===1);}
+    S.type='basic'; // TV만은 결합유형 무관 → solo요금
+    // TV만 선택 시 항상 TV 1대 자동 선택, "없음" 버튼 숨김
+    S.tvCount=1;
+    for(let i=0;i<=4;i++)$('tc'+i).classList.toggle('on',i===1);
+    setEl('tc0',el=>el.style.display='none');
+    S.gigaMode='none';S.giga2y=false;
     syncGiga();
     $('seonap-area').style.display=S.sm?'block':'none';
-    // TV만: 바로할인 비활성화, 현재 바로할인이면 없음으로 리셋
-    setEl('disc-baro',el=>el.disabled=true);
-    if(S.discount==='baro'){S.discount='none';setDiscount('none');}
-    else setDiscount(S.discount);
   } else {
     // both
-    S.giga2y=false;syncGiga();
+    S.giga2y=false;S.gigaMode='none';syncGiga();
     setEl('opt-note',el=>el.style.display='none');
     if(S.tvCount===0){S.tvCount=1;for(let i=0;i<=4;i++)$('tc'+i).classList.toggle('on',i===1);}
+    // 인터넷+TV: 이전이 inet이었으면 요우결로 전환, 아니면 유지
     if(S.svc==='inet'||S.type==='basic') S.type='u';
     ['btn-basic','btn-u','btn-ga'].forEach(id=>{const el=$(id);if(el)el.classList.remove('on');});
     const activeBtn='btn-'+(S.type==='basic'?'basic':S.type==='ga'?'ga':'u');
     $(activeBtn)?.classList.add('on');
-    setEl('disc-baro',el=>el.disabled=false); // 바로할인 활성화
   }
   renderTV();calcAll();
 }
@@ -834,6 +862,8 @@ function setType(t){
 function setDiscount(d){
   S.discount=d;
   ['disc-none','disc-baro','disc-fam'].forEach(id=>$(id).classList.remove('on'));
+  $('disc-'+d==='none'?'disc-none':d==='baro'?'disc-baro':'disc-fam').classList.add('on');
+  // 정확한 선택
   if(d==='none') $('disc-none').classList.add('on');
   else if(d==='baro') $('disc-baro').classList.add('on');
   else $('disc-fam').classList.add('on');
@@ -855,31 +885,61 @@ function setTv(n){
 }
 
 // ── SM
-function toggleSM(){S.sm=!S.sm;syncSM();renderTV();calcAll();}
+function toggleSM(){S.sm=!S.sm;syncSM();syncGiga();renderTV();calcAll();}
 function syncSM(){
+  const isTv=S.svc==='tv_only';
   $('sm-toggle').className=S.sm?'opt-item on-sm':'opt-item';
-  $('seonap-area').style.display=(S.sm&&S.svc==='tv_only')?'block':'none';
+  setEl('sm-sub',el=>el.textContent=S.sm&&isTv?'TV2요금·Smart3 0원·출동비면제':'셋탑·출동비');
+  $('seonap-area').style.display=(S.sm&&isTv)?'block':'none';
   if(!S.sm){if(CSEL_DEFS['seonap-sel'])CSEL_DEFS['seonap-sel'].value='0';setEl('seonap-sel-label',el=>el.textContent='선납권 없음');setEl('seonap-tbl-wrap',el=>el.style.display='none');['sum-seonap-row','sum-seonap-row2'].forEach(id=>setEl(id,el=>el.style.display='none'));}
   ['bdg-sm2'].forEach(id=>setEl(id,el=>el.style.display=S.sm?'':'none'));
   updateOptNote();
 }
 
-// ── 초고속2년
-function toggleGiga(){if(S.svc!=='tv_only')return;S.giga2y=!S.giga2y;syncGiga();calcAll();}
+// ── 초고속 (2년이상/2년이내 — 상호 배타, 같은 버튼 누르면 해제)
+function setGigaMode(mode){
+  if(S.svc!=='tv_only')return;
+  S.gigaMode=(S.gigaMode===mode)?'none':mode;
+  S.giga2y=(S.gigaMode==='2y');
+  syncGiga();calcAll();
+}
 function syncGiga(){
   const locked=S.svc!=='tv_only';
-  const wrap=$('giga-wrap');
-  wrap.style.opacity=locked?'.4':'1';wrap.style.pointerEvents=locked?'none':'auto';
-  $('giga-sub').textContent=locked?'TV만 모드에서 사용':'해당 시 체크';
-  wrap.className=S.giga2y?'opt-item on-teal':'opt-item';
-  ['bdg-giga2'].forEach(id=>setEl(id,el=>el.style.display=S.giga2y?'':'none'));
+  // 2년이상 버튼
+  const w2=$('giga2y-wrap');
+  if(w2){
+    w2.style.opacity=locked?'.4':'1';
+    w2.style.pointerEvents=locked?'none':'auto';
+    w2.className=(S.gigaMode==='2y')?'opt-item on-teal':'opt-item';
+    setEl('giga2y-sub',el=>el.textContent=locked?'TV만 모드에서':'해당 시 선택');
+  }
+  // 2년이내 버튼
+  const ww=$('gigaW2y-wrap');
+  if(ww){
+    ww.style.opacity=locked?'.4':'1';
+    ww.style.pointerEvents=locked?'none':'auto';
+    ww.className=(S.gigaMode==='within2y')?'opt-item on-within2y':'opt-item';
+    setEl('gigaW2y-sub',el=>el.textContent=locked?'TV만 모드에서':'해당 시 선택');
+  }
+  // 배지
+  setEl('bdg-giga2',el=>{
+    if(S.gigaMode==='2y'){el.textContent='초고속2년+';el.style.display='';el.style.background='';el.style.color='';}
+    else if(S.gigaMode==='within2y'){el.textContent='초고속2년이내';el.style.display='';el.style.background='#FEF2F2';el.style.color='var(--red)';}
+    else{el.style.display='none';el.style.background='';el.style.color='';}
+  });
   updateOptNote();
 }
 
 function updateOptNote(){
+  const isTv=S.svc==='tv_only';
   const lines=[];
-  if(S.sm)lines.push('서비스매니저 — TV2 요금 · Smart3 0원 · 출동비 면제');
-  if(S.giga2y)lines.push('초고속 2년이상 적용 중');
+  if(isTv){
+    if(S.sm&&S.gigaMode==='2y')        lines.push('SM + 초고속2년이상 → TV2요금(u2) · Smart3 0원 · 출동비 면제');
+    else if(S.sm&&S.gigaMode==='within2y') lines.push('SM + 초고속2년이내 → TV1요금(solo1) · 일반셋탑 · 출동비 면제');
+    else if(S.sm)                       lines.push('서비스매니저 → TV2요금 · Smart3 0원 · 출동비 면제');
+  } else {
+    if(S.sm) lines.push('서비스매니저 — 출동비 면제 · Smart3 0원');
+  }
   const n=$('opt-note');
   if(lines.length){n.innerHTML=lines.map(l=>`· ${l}`).join('<br>');n.style.display='block';}
   else n.style.display='none';
@@ -945,19 +1005,24 @@ function getInetFee(pid){
 
 function getTVFee(pid,isFirst){
   const d=TV[pid];if(!d)return 0;
-  if(S.sm&&S.svc==='tv_only'){
-    // SM + TV만: u2 요금 (별도결합)
+  if(S.svc==='tv_only'){
+    // SM + 2년이내 → u1 (ALL16500/스탠다드13200/이코노미9900) 전 대수
+    if(S.sm&&S.gigaMode==='within2y') return d['u1']??0;
+    // SM만 or SM+2년이상 → u2 (ALL9350/스탠다드7700/이코노미6050) 전 대수
+    if(S.sm)                          return d['u2']??0;
+    // SM 없음 → u1 (ALL16500/스탠다드13200/이코노미9900)
     return d['u'+(isFirst?'1':'2')]??0;
   }
-  if(S.svc==='tv_only'||S.type==='basic'){
-    return d['solo'+(isFirst?'1':'2')]??0;
-  }
+  if(S.type==='basic') return d['solo'+(isFirst?'1':'2')]??0;
   return d[S.type+(isFirst?'1':'2')]??0;
 }
 
 function getSTBFee(sid,isFirst){
   const d=STB[sid];if(!d)return 0;
-  if(S.sm&&S.svc==='tv_only')return isFirst?d.s1:d.s2;
+  // SM + 2년이내 → 일반 셋탑임대료 (Smart3=4,400원)
+  if(S.sm&&S.svc==='tv_only'&&S.gigaMode==='within2y') return isFirst?d.n1:d.n2;
+  // SM만 or SM+2년이상 → SM 셋탑요금 (Smart3=0원)
+  if(S.sm&&S.svc==='tv_only') return isFirst?d.s1:d.s2;
   return isFirst?d.n1:d.n2;
 }
 
@@ -1087,7 +1152,6 @@ function updateBenefit(){
   const fee=calcInstallFee();
   if(S.sm){
     iv.textContent='면제';iv.className='bx-val';
-    // SM일때 실제 면제 금액 표시
     const raw=S.svc==='inet'?36300:S.svc==='both'?(S.tvCount===0?36300:34100+22000+(S.tvCount-1)*17600):(S.tvCount===0?0:34100+(S.tvCount-1)*17600);
     isub.textContent=raw>0?`혜택 ${fmt(raw)}원`:'출동비 면제';
     iBox.className='bx active';
@@ -1099,131 +1163,128 @@ function updateBenefit(){
 }
 
 function buildSMS(lines,total){
-  if(!lines.length){$('sms-box').textContent='안녕하세요 고객님\n방금 상담드린 SK브로드밴드입니다.\n\n(요금 계산 탭에서 선택 후 자동 생성됩니다)\n\n감사합니다.';return;}
+  if(!lines.length){$('sms-box').textContent='안녕하세요 고객님\n방금 상담드린 SK브로드밴드입니다.\n\n설계요금\n(요금 계산 탭에서 선택 후 자동 생성됩니다)\n\n감사합니다.';return;}
   const isBoth=S.svc==='both',isTvOnly=S.svc==='tv_only',isInet=S.svc==='inet';
   const ip=cselVal('inet-plan');
+  const sep='─────────────────';
 
   // 가입 상품
   let pl=[];
-  if(!isTvOnly&&ip)pl.push(`인터넷 : ${INET_LB[ip]||''}`);
+  if(!isTvOnly&&ip)pl.push(`  인터넷 : ${INET_LB[ip]||''}`);
   for(let i=1;i<=S.tvCount;i++){
-    const tp=cselVal(i===1?'tvp1':'tvp'+i);const sp=cselVal(i===1?'stb1':'stb'+i);
-    if(tp||sp){
-      const tvName=S.tvCount===1?'BTV':`BTV${i}`;
-      pl.push(`${tvName} : ${TV_LB[tp]||'-'} / ${STB[sp]?.lb||'-'}`);
-    }
+    const tp=cselVal(i===1?'tvp1':'tvp'+i),sp=cselVal(i===1?'stb1':'stb'+i);
+    if(tp||sp)pl.push(`  BTV${i===1?'':i} : ${TV_LB[tp]||'-'} / ${STB[sp]?.lb||'-'}`);
   }
-  if(S.phone){const pp=cselVal('phone-plan');pl.push(`전화 : ${PHONE_LB[pp]||''}`);}
+  if(S.phone){const pp=cselVal('phone-plan');pl.push(`  전화 : ${PHONE_LB[pp]||''}`);}
 
   // 월 요금
   let fl=[];
-  if(!isTvOnly&&ip){const fee=getInetFee(ip);if(fee!==null){let fs=`인터넷 : 월 ${fmt(fee)}원`;if(S.discount==='baro')fs+=` (바로할인 ${fmt(getBaroDC())}원 적용)`;else if(S.discount==='fam')fs+=` (패밀리 50% 적용)`;fl.push(fs);}}
+  if(!isTvOnly&&ip){
+    const fee=getInetFee(ip);
+    if(fee!==null){
+      let fs=`  인터넷 : ${fmt(fee)}원`;
+      if(S.discount==='baro')fs+=` (바로할인 ${fmt(getBaroDC())}원 적용)`;
+      else if(S.discount==='fam')fs+=` (패밀리 50% 적용)`;
+      fl.push(fs);
+    }
+  }
   for(let i=1;i<=S.tvCount;i++){
-    const tp=cselVal(i===1?'tvp1':'tvp'+i);const sp=cselVal(i===1?'stb1':'stb'+i);
+    const tp=cselVal(i===1?'tvp1':'tvp'+i),sp=cselVal(i===1?'stb1':'stb'+i);
     if(!tp&&!sp)continue;
     const tvf=getTVFee(tp,i===1),sf=getSTBFee(sp,i===1);
-    const tvName=S.tvCount===1?'BTV':`BTV${i}`;
-    let tl=`${tvName} : 월 ${fmt(tvf+sf)}원`;
-    if(isTvOnly&&i===1&&S.giga2y&&tp){const s0=TV[tp]?.solo1||0,df=TV[tp]?.['u1']||s0;if(s0!==df)tl+=` (기준 ${fmt(s0)}원 → 초고속2년이상 ${fmt(df)}원)`;}
-    if(isTvOnly&&i===1&&!S.giga2y&&!S.sm&&sp==='smart3')tl+=' (셋탑임대료 2,200원 할인 적용)';
+    let tl=`  BTV${i===1?'':i} : ${fmt(tvf+sf)}원`;
+    if(isTvOnly&&i===1&&tp){
+      if(S.sm&&S.gigaMode==='within2y'){
+        const s0=TV[tp]?.u2||0,df=TV[tp]?.u1||s0;
+        if(s0!==df)tl+=`\n  (SM BTV 할인요금 ${fmt(s0)}원 → 초고속2년이내 ${fmt(df)}원)`;
+      } else if(S.sm){
+        const s0=TV[tp]?.solo1||0,df=TV[tp]?.u2||s0;
+        if(s0!==df)tl+=`\n  (일반 ${fmt(s0)}원 → 서비스매니저 BTV 할인요금 ${fmt(df)}원)`;
+      }
+    }
     fl.push(tl);
   }
-  if(S.phone){const pp=cselVal('phone-plan');fl.push(`전화 : 월 ${fmt(PHONE_FEE[pp]||0)}원`);}
-  if(S.sm&&cselVal('seonap-sel')!=='0')fl.push(`선납권 할인 : -2,200원/월 (12개월)`);
+  if(S.phone){const pp=cselVal('phone-plan');fl.push(`  전화 : ${fmt(PHONE_FEE[pp]||0)}원`);}
+  if(S.sm&&cselVal('seonap-sel')!=='0')fl.push(`  한번더 할인 : -2,200원/월 (12개월간)`);
 
-  // 약정
-  const cl=S.discount==='baro'
-    ?'약정 : 3년 (기간 내 해지 시 할인반환금 청구)'
-    :'약정 : 3년 (기간 내 해지 시 할인반환금 청구)\n1년 이내 해지 시 사은품 추가 할인반환금 청구';
-
-  // 바로할인 혜택 (사은품 없음)
+  // 바로할인 혜택
   let bs='';
   if(S.discount==='baro'){
     const dc=getBaroDC(),ib=calcInstallFee();
-    bs=`\n[바로할인 혜택]\n인터넷 할인 : ${fmt(dc)}원 x 36개월 = ${fmt(dc*36)}원`;
-    if(ib>0)bs+=`\n출동비 혜택 : ${fmt(ib)}원\n총 혜택금액 : ${fmt(dc*36+ib)}원`;
+    bs=`\n[ 바로할인 혜택 ]\n  인터넷 할인 : ${fmt(dc)}원 × 36개월 = ${fmt(dc*36)}원`;
+    if(ib>0)bs+=`\n  출동비 혜택 : ${fmt(ib)}원\n  총 혜택금액 : ${fmt(dc*36+ib)}원`;
   }
 
-  // 사은품 (바로할인 시 미제공)
+  // 사은품
   let gs2='';
-  if(S.discount!=='baro'){const g=calcGift();if(g>0)gs2=`\n사은품 : ${fmt(g)}원 상당`;}
+  if(S.discount!=='baro'){const g=calcGift();if(g>0)gs2=`\n[ 사은품 ]\n  ${fmt(g)}원 상당`;}
 
-  // 서비스매니저
+  // 서비스매니저 혜택
   let smTxt='';
-  if(S.sm){
-    smTxt='\n[서비스매니저 혜택]\n출동비 면제';
-    if(isTvOnly)smTxt+='\nSmart3 셋탑임대료 0원\nTV2요금 적용';
+  if(S.sm&&isTvOnly&&S.gigaMode==='within2y'){
+    smTxt='\n[ 서비스매니저 혜택 ]\n  출동비 34,100 면제\n  BTV 할인요금 적용 (초고속 2년이내)';
+  } else if(S.sm&&isTvOnly){
+    smTxt='\n[ 서비스매니저 혜택 ]\n  출동비 34,100 면제\n  Smart3 셋탑임대료 0원\n  BTV 할인요금 적용';
+    if(S.gigaMode==='2y')smTxt+='\n  초고속 2년이상 적용';
+  } else if(S.sm){
+    smTxt='\n[ 서비스매니저 혜택 ]\n  출동비 34,100 면제\n  Smart3 셋탑임대료 0원';
   }
 
-  // 초고속2년
-  let gi=isTvOnly&&S.giga2y?'\n초고속 2년이상 적용':'';
+  // 약정
+  const cl=S.discount==='baro'
+    ?'  3년 약정 (기간 내 해지 시 할인반환금 청구)'
+    :'  3년 약정 (기간 내 해지 시 할인반환금 청구)\n  단, 1년 이내 해지 시 사은품 추가 할인반환금 청구';
 
-  // 가족결합/알뜰한결합 (요가결 + 요우결 모두 표시)
+  // 가족결합
   let gaSection='';
-  if(S.type==='ga'||S.type==='u'){
-    if(S.type==='ga'){
-      const isLan=ip==='lan';
-      gaSection='\n[가족결합 SKT 핸드폰 기본료 할인]';
-      gaSection+='\n1회선 : 3,500원 할인';
-      gaSection+='\n2회선 : 7,000원 할인';
-      gaSection+='\n3회선 : 18,000원 할인';
-      gaSection+='\n4~5회선 : 24,000원 할인';
-      if(isLan) gaSection+='\n※ 광랜(100M) 결합 최대 18,000원';
-      gaSection+='\n';
-    }
-    gaSection+='\n[알뜰한결합 안내]';
-    gaSection+='\nSK7모바일, 리브모바일, 토스모바일,';
-    gaSection+='\n이야기모바일, 모빙, 스마텔, 아이즈모바일, 티플러스';
-    gaSection+='\n핸드폰 기본료 할인 미적용';
-    gaSection+='\nSK브로드밴드 인터넷 할인율만 적용';
+  if(S.type==='ga'){
+    const isLan=ip==='lan';
+    gaSection=`\n[ 가족결합 SKT 핸드폰 기본료 할인 ]\n  1회선 : 3,500원\n  2회선 : 7,000원\n  3회선 : 18,000원\n  4~5회선 : 24,000원`;
+    if(isLan)gaSection+=`\n  ※ 광랜(100M) 결합 시 최대 18,000원`;
+    gaSection+=`\n\n[ 알뜰한결합 안내 ]\n  SK7모바일, 리브모바일, 토스모바일,\n  이야기모바일, 모빙, 스마텔, 아이즈모바일, 티플러스\n  핸드폰 기본료 할인 미적용\n  SK브로드밴드 인터넷 할인율만 적용`;
+  } else if(S.type==='u'){
+    gaSection=`\n[ 알뜰한결합 안내 ]\n  SK7모바일, 리브모바일, 토스모바일,\n  이야기모바일, 모빙, 스마텔, 아이즈모바일, 티플러스\n  핸드폰 기본료 할인 미적용\n  SK브로드밴드 인터넷 할인율만 적용`;
   }
 
-  const sep='─────────────────';
-  let msg='안녕하세요 고객님\n방금 상담드린 SK브로드밴드입니다.\n';
-  msg+=`${sep}\n[가입 상품]\n${pl.join('\n')}\n`;
-  msg+=`${sep}\n[월 요금]\n${fl.join('\n')}\n`;
-  msg+=`${sep}\n월 납부액 : ${fmt(total)}원\n`;
-  msg+=`${sep}\n${cl}`;
-  if(bs)msg+=bs;
-  if(gs2)msg+=gs2;
-  if(smTxt)msg+=smTxt;
-  if(gi)msg+=gi;
-  if(gaSection)msg+=gaSection;
+  const rn=localStorage.getItem('rep-name')||'';
+  const rp=localStorage.getItem('rep-phone')||'';
+  let msg=`안녕하세요 고객님\n방금 상담 드린 SK브로드밴드 ${rn} 입니다.\n\n`;
+  msg+=`${sep}\n[ 가입 상품 ]\n${pl.join('\n')}\n\n[ 월 요금 ]\n${fl.join('\n')}\n${sep}\n월 납부액 : ${fmt(total)}원 VAT포함\n${sep}\n\n[ 약정 안내 ]\n${cl}`;
+  if(bs)msg+='\n\n'+bs;
+  if(gs2)msg+='\n\n'+gs2;
+  if(smTxt)msg+='\n\n'+smTxt;
+  if(gaSection)msg+='\n\n'+gaSection;
   msg+='\n\n감사합니다.';
+  // 내 정보 서명 추가
+  if(rn||rp){
+    msg+=`\n${sep}`;
+    if(rn&&rp) msg+=`\n  ${rn} | ${rp}`;
+    else if(rn) msg+=`\n  ${rn}`;
+    else msg+=`\n  ${rp}`;
+    msg+=`\n  SK브로드밴드`;
+  }
   $('sms-box').textContent=msg;
 }
 
+function saveRepInfo(){
+  const n=$('rep-name')?.value.trim()||'';
+  const p=$('rep-phone')?.value.trim()||'';
+  localStorage.setItem('rep-name',n);
+  localStorage.setItem('rep-phone',p);
+  const btn=event.target;
+  btn.textContent='저장됨 ✓';btn.style.background='#16a34a';
+  setTimeout(()=>{btn.textContent='저장';btn.style.background='var(--p)';},1500);
+  calcAll();
+}
+function loadRepInfo(){
+  const n=localStorage.getItem('rep-name')||'';
+  const p=localStorage.getItem('rep-phone')||'';
+  const ni=$('rep-name');const pi=$('rep-phone');
+  if(ni)ni.value=n;
+  if(pi)pi.value=p;
+}
 function formatPhone(el){let v=el.value.replace(/\D/g,'');if(v.length<=3)el.value=v;else if(v.length<=7)el.value=v.slice(0,3)+'-'+v.slice(3);else el.value=v.slice(0,3)+'-'+v.slice(3,7)+'-'+v.slice(7,11);}
-
-// 발신자 번호 저장
-function saveMyPhone(){
-  const el=$('my-phone');
-  const v=el?.value||'';
-  if(!v){alert('내 번호를 먼저 입력해 주세요.');return;}
-  localStorage.setItem('my-phone',v);
-  const btn=el.nextElementSibling;
-  el.style.borderColor='var(--p)';
-  setTimeout(()=>el.style.borderColor='var(--bd)',1500);
-  alert('저장되었습니다.');
-}
-
-// 발신자 번호 불러오기
-function loadMyPhone(){
-  const saved=localStorage.getItem('my-phone');
-  const el=$('my-phone');
-  if(saved&&el) el.value=saved;
-}
-
-function sendSMS(){
-  const custPhone=($('cust-phone')?.value||'').replace(/\D/g,'');
-  const myPhone=($('my-phone')?.value||'').replace(/\D/g,'');
-  let t=$('sms-box').textContent;
-  if(!custPhone){alert('고객 전화번호를 먼저 입력해 주세요.');return;}
-  // 발신자 번호가 있으면 문자 맨 앞에 삽입
-  if(myPhone) t=`발신 : ${($('my-phone').value||myPhone)}\n`+t;
-  const uri='sms:'+custPhone+'?body='+encodeURIComponent(t);
-  window.location.href=uri;
-}
+function sendSMS(){const p=($('cust-phone')?.value||'').replace(/\D/g,'');const t=$('sms-box').textContent;if(!p){alert('고객 전화번호를 먼저 입력해 주세요.');return;}window.location.href='sms:'+p+'?body='+encodeURIComponent(t);}
 function copySMS(){const t=$('sms-box').textContent;const done=()=>{const x=$('toast');x.classList.add('show');setTimeout(()=>x.classList.remove('show'),2200);};navigator.clipboard?.writeText(t).then(done).catch(()=>{const ta=document.createElement('textarea');ta.value=t;ta.style.cssText='position:fixed;opacity:0';document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);done();});}
 
 let _dp=null;
@@ -1235,7 +1296,7 @@ if(window.navigator.standalone)$('install-banner')&&($('install-banner').style.d
 
 // 초기화
 setSvc('both');
-loadMyPhone();
+loadRepInfo();
 document.addEventListener('input',e=>{if(e.target.tagName==='SELECT')calcAll();});
 </script>
 </body>

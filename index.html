@@ -384,7 +384,7 @@ svg{display:inline-block;vertical-align:middle;flex-shrink:0}
       </button>
       <button class="btn" id="disc-fam" onclick="setDiscount('fam')">
         <svg class="i18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-        <div><span>패밀리</span><span class="btn-sub">단독 50%</span></div>
+        <div><span>패밀리</span><span class="btn-sub">고정요금</span></div>
       </button>
     </div>
     <div class="hint" id="disc-info" style="display:none">
@@ -875,7 +875,7 @@ function setDiscount(d){
   else $('disc-fam').classList.add('on');
 
   const hintEl=$('disc-info');
-  const hints={none:'',baro:'바로할인 : 인터넷 기본료에서 할인 반영',fam:'패밀리 : 인터넷 단독 요금의 50%'};
+  const hints={none:'',baro:'바로할인 : 인터넷 기본료에서 할인 반영',fam:'패밀리 : 고정 요금 적용 (바로할인·요가결 적용 불가)'};
   if(d==='none'){hintEl.style.display='none';}
   else{$('disc-hint-text').textContent=hints[d];hintEl.style.display='flex';}
   const bdgMap={baro:'바로할인',fam:'패밀리'};
@@ -1059,24 +1059,30 @@ function renderTV(){
 }
 
 // ── 요금 계산
+// 패밀리 고정 요금
+const FAM={lite:23100, giga:28600, lan:17600};
+
 function getBaroDC(pid){
-  // 광랜(lan): 3,850원 할인
-  if(pid==='lan') return 3850;
-  // 인터넷+TV: 스탠다드/ALL 선택 시 13,200원, 그 외 6,600원
-  const tv1=cselVal('tvp1');const hi=(S.svc==='both')&&S.tvCount>0&&(tv1==='standard'||tv1==='all');
-  return hi?13200:6600;
+  const tv1=cselVal('tvp1');
+  const isBoth=(S.svc==='both')&&S.tvCount>0;
+  const hiTV=isBoth&&(tv1==='standard'||tv1==='all');
+  if(pid==='lan')  return hiTV?11000:3850;
+  if(pid==='lite') return hiTV?13200:6600;
+  if(pid==='giga') return hiTV?14300:7150;
+  return 0;
 }
 
 function getInetFee(pid){
   const d=INET[pid];if(!d)return null;
-  if(S.discount==='fam')return Math.round(d.solo*0.5);
-  // 인터넷 단독: ga=요가결요금, basic=단독요금 (요우결 없음)
+  // 패밀리: 고정 요금, 바로할인/요가결 적용 불가
+  if(S.discount==='fam') return FAM[pid]??null;
+  // 인터넷 단독
   if(S.svc==='inet'){
     const base=S.type==='ga'?d.ga:d.solo;
     if(S.discount==='baro')return base-getBaroDC(pid);
     return base;
   }
-  // 인터넷+TV: basic=solo, u/ga=결합요금
+  // 인터넷+TV
   if(S.discount==='baro')return d[S.type==='basic'?'solo':S.type]-getBaroDC(pid);
   if(S.type==='basic')return d.solo;
   return d[S.type];
@@ -1164,7 +1170,7 @@ function calcAll(){
       const itag=$('inet-tag');
       if(itag){
         if(S.discount==='baro'){itag.innerHTML=`<span class="dc-tag"><svg style="width:11px;height:11px;stroke-width:2" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> 바로할인 ${fmt(getBaroDC(pid))}원 적용</span>`;itag.style.display='block';}
-        else if(S.discount==='fam'){itag.innerHTML=`<span class="dc-tag"><svg style="width:11px;height:11px;stroke-width:2" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg> 단독 ${fmt(INET[pid].solo)}원 → 50%</span>`;itag.style.display='block';}
+        else if(S.discount==='fam'){itag.innerHTML=`<span class="dc-tag"><svg style="width:11px;height:11px;stroke-width:2" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg> 패밀리 고정요금 ${fmt(FAM[pid]||0)}원 적용</span>`;itag.style.display='block';}
         else itag.style.display='none';
       }
       const cls='si-val'+(S.discount!=='none'?' blue':'');
@@ -1299,7 +1305,7 @@ function buildSMS(lines,total){
     if(fee!==null){
       let fs=`  인터넷 : ${fmt(fee)}원`;
       if(S.discount==='baro')fs+=` (바로할인 ${fmt(getBaroDC(ip))}원 적용)`;
-      else if(S.discount==='fam')fs+=` (패밀리 50% 적용)`;
+      else if(S.discount==='fam')fs+=` (패밀리 고정요금 적용)`;
       fl.push(fs);
     }
   }

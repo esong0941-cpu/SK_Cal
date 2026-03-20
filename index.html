@@ -1059,7 +1059,13 @@ function renderTV(){
 }
 
 // ── 요금 계산
-function getBaroDC(){const tv1=cselVal('tvp1');const hi=(S.svc==='both')&&S.tvCount>0&&(tv1==='standard'||tv1==='all');return hi?13200:6600;}
+function getBaroDC(pid){
+  // 광랜(lan): 3,850원 할인
+  if(pid==='lan') return 3850;
+  // 인터넷+TV: 스탠다드/ALL 선택 시 13,200원, 그 외 6,600원
+  const tv1=cselVal('tvp1');const hi=(S.svc==='both')&&S.tvCount>0&&(tv1==='standard'||tv1==='all');
+  return hi?13200:6600;
+}
 
 function getInetFee(pid){
   const d=INET[pid];if(!d)return null;
@@ -1067,11 +1073,11 @@ function getInetFee(pid){
   // 인터넷 단독: ga=요가결요금, basic=단독요금 (요우결 없음)
   if(S.svc==='inet'){
     const base=S.type==='ga'?d.ga:d.solo;
-    if(S.discount==='baro')return base-getBaroDC();
+    if(S.discount==='baro')return base-getBaroDC(pid);
     return base;
   }
   // 인터넷+TV: basic=solo, u/ga=결합요금
-  if(S.discount==='baro')return d[S.type==='basic'?'solo':S.type]-getBaroDC();
+  if(S.discount==='baro')return d[S.type==='basic'?'solo':S.type]-getBaroDC(pid);
   if(S.type==='basic')return d.solo;
   return d[S.type];
 }
@@ -1157,7 +1163,7 @@ function calcAll(){
       setEl('inet-price',el=>{el.textContent=fmt(fee);el.className='subtot-val'+(S.discount==='baro'||S.discount==='fam'?' blue':'');});
       const itag=$('inet-tag');
       if(itag){
-        if(S.discount==='baro'){itag.innerHTML=`<span class="dc-tag"><svg style="width:11px;height:11px;stroke-width:2" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> 바로할인 ${fmt(getBaroDC())}원 적용</span>`;itag.style.display='block';}
+        if(S.discount==='baro'){itag.innerHTML=`<span class="dc-tag"><svg style="width:11px;height:11px;stroke-width:2" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> 바로할인 ${fmt(getBaroDC(pid))}원 적용</span>`;itag.style.display='block';}
         else if(S.discount==='fam'){itag.innerHTML=`<span class="dc-tag"><svg style="width:11px;height:11px;stroke-width:2" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg> 단독 ${fmt(INET[pid].solo)}원 → 50%</span>`;itag.style.display='block';}
         else itag.style.display='none';
       }
@@ -1292,7 +1298,7 @@ function buildSMS(lines,total){
     const fee=getInetFee(ip);
     if(fee!==null){
       let fs=`  인터넷 : ${fmt(fee)}원`;
-      if(S.discount==='baro')fs+=` (바로할인 ${fmt(getBaroDC())}원 적용)`;
+      if(S.discount==='baro')fs+=` (바로할인 ${fmt(getBaroDC(ip))}원 적용)`;
       else if(S.discount==='fam')fs+=` (패밀리 50% 적용)`;
       fl.push(fs);
     }
@@ -1326,7 +1332,7 @@ function buildSMS(lines,total){
   // 바로할인 혜택
   let bs='';
   if(S.discount==='baro'){
-    const dc=getBaroDC(),ib=calcInstallFee();
+    const dc=getBaroDC(ip),ib=calcInstallFee();
     bs=`\n[ 바로할인 혜택 ]\n  인터넷 할인 : ${fmt(dc)}원 × 36개월 = ${fmt(dc*36)}원`;
     if(ib>0)bs+=`\n  출동비 혜택 : ${fmt(ib)}원\n  총 혜택금액 : ${fmt(dc*36+ib)}원`;
   }

@@ -1,10 +1,10 @@
 {
   "name": "SK브로드밴드계산기",
   "short_name": "계산기",
-  "start_url": "/SK/",
+  "start_url": "/SK_Cal/",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#003087",
+  "theme_color": "#E8001C",
   "icons": [
     {
       "src": "icon-192(1).png",

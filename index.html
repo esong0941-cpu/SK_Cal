@@ -446,14 +446,14 @@ svg{display:inline-block;vertical-align:middle;flex-shrink:0}
         <div class="opt-item" id="giga2y-wrap" onclick="setGigaMode('2y')">
           <svg class="i18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
           <div class="opt-info">
-            <span class="opt-name">초고속2년이상</span>
+            <span class="opt-name">초고속1년이상</span>
             <span class="opt-desc" id="giga2y-sub">해당 시 선택</span>
           </div>
         </div>
         <div class="opt-item" id="gigaW2y-wrap" onclick="setGigaMode('within2y')">
           <svg class="i18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
           <div class="opt-info">
-            <span class="opt-name">초고속2년이내</span>
+            <span class="opt-name">초고속1년이내</span>
             <span class="opt-desc" id="gigaW2y-sub">해당 시 선택</span>
           </div>
         </div>
@@ -612,7 +612,7 @@ svg{display:inline-block;vertical-align:middle;flex-shrink:0}
         <span class="bdg" id="bdg-type2">요우결</span>
         <span class="bdg" id="bdg-disc2" style="display:none"></span>
         <span class="bdg" id="bdg-sm2" style="display:none">SM</span>
-        <span class="bdg" id="bdg-giga2" style="display:none">초고속2년+</span>
+        <span class="bdg" id="bdg-giga2" style="display:none">초고속1년+</span>
       </div>
     </div>
     <div class="sum-rows">
@@ -777,8 +777,8 @@ const TV_DOTC=['','#2563EB','#6B7280','#374151','#111827'];
 // S.type: 'basic' | 'u' | 'ga'
 // S.gigaMode: 'none' | '2y' | 'within2y'
 //   none     = 초고속 미적용
-//   2y       = 초고속 2년이상
-//   within2y = 초고속 2년이내
+//   2y       = 초고속 1년이상
+//   within2y = 초고속 1년이내
 // TV만 요금 규칙:
 //   SM만            → TV2요금 (u1/u2), SM셋탑(s1/s2), 출동비 면제
 //   SM + 2년이상     → TV2요금 (u2 전체), SM셋탑(s1/s2), 출동비 면제
@@ -918,7 +918,7 @@ function syncSM(){
   updateOptNote();
 }
 
-// ── 초고속 (2년이상/2년이내 — 상호 배타, 같은 버튼 누르면 해제)
+// ── 초고속 (1년이상/1년이내 — 상호 배타, 같은 버튼 누르면 해제)
 function setGigaMode(mode){
   if(S.svc!=='tv_only')return;
   S.gigaMode=(S.gigaMode===mode)?'none':mode;
@@ -945,8 +945,8 @@ function syncGiga(){
   }
   // 배지
   setEl('bdg-giga2',el=>{
-    if(S.gigaMode==='2y'){el.textContent='초고속2년+';el.style.display='';el.style.background='';el.style.color='';}
-    else if(S.gigaMode==='within2y'){el.textContent='초고속2년이내';el.style.display='';el.style.background='#FEF2F2';el.style.color='var(--red)';}
+    if(S.gigaMode==='2y'){el.textContent='초고속1년+';el.style.display='';el.style.background='';el.style.color='';}
+    else if(S.gigaMode==='within2y'){el.textContent='초고속1년이내';el.style.display='';el.style.background='#FEF2F2';el.style.color='var(--red)';}
     else{el.style.display='none';el.style.background='';el.style.color='';}
   });
   updateOptNote();
@@ -956,8 +956,8 @@ function updateOptNote(){
   const isTv=S.svc==='tv_only';
   const lines=[];
   if(isTv){
-    if(S.sm&&S.gigaMode==='2y')        lines.push('SM + 초고속2년이상 → TV2요금(u2) · Smart3 0원 · 출동비 면제');
-    else if(S.sm&&S.gigaMode==='within2y') lines.push('SM + 초고속2년이내 → TV1요금(solo1) · 일반셋탑 · 출동비 면제');
+    if(S.sm&&S.gigaMode==='2y')        lines.push('SM + 초고속1년이상 → TV2요금(u2) · Smart3 0원 · 출동비 면제');
+    else if(S.sm&&S.gigaMode==='within2y') lines.push('SM + 초고속1년이내 → TV1요금(solo1) · 일반셋탑 · 출동비 면제');
     else if(S.sm)                       lines.push('서비스매니저 → TV2요금 · Smart3 0원 · 출동비 면제');
   } else {
     if(S.sm) lines.push('서비스매니저 — 출동비 면제 · Smart3 0원');
@@ -1335,7 +1335,7 @@ function buildSMS(lines,total){
     if(isTvOnly&&i===1&&tp){
       if(S.sm&&S.gigaMode==='within2y'){
         const s0=TV[tp]?.u2||0,df=TV[tp]?.u1||s0;
-        if(s0!==df)tl+=`\n  (SM BTV 할인요금 ${fmt(s0)}원 → 초고속2년이내 ${fmt(df)}원)`;
+        if(s0!==df)tl+=`\n  (SM BTV 할인요금 ${fmt(s0)}원 → 초고속1년이내 ${fmt(df)}원)`;
       } else if(S.sm){
         const s0=TV[tp]?.solo1||0,df=TV[tp]?.u2||s0;
         if(s0!==df)tl+=`\n  (일반 ${fmt(s0)}원 → 서비스매니저 BTV 할인요금 ${fmt(df)}원)`;
@@ -1366,10 +1366,10 @@ function buildSMS(lines,total){
   // 서비스매니저 혜택
   let smTxt='';
   if(S.sm&&isTvOnly&&S.gigaMode==='within2y'){
-    smTxt='\n[ 서비스매니저 혜택 ]\n  출동비 34,100 면제\n  BTV 할인요금 적용 (초고속 2년이내)';
+    smTxt='\n[ 서비스매니저 혜택 ]\n  출동비 34,100 면제\n  BTV 할인요금 적용 (초고속 1년이내)';
   } else if(S.sm&&isTvOnly){
     smTxt='\n[ 서비스매니저 혜택 ]\n  출동비 34,100 면제\n  Smart3 셋탑임대료 0원\n  BTV 할인요금 적용';
-    if(S.gigaMode==='2y')smTxt+='\n  초고속 2년이상 적용';
+    if(S.gigaMode==='2y')smTxt+='\n  초고속 1년이상 적용';
   } else if(S.sm){
     smTxt='\n[ 서비스매니저 혜택 ]\n  출동비 34,100 면제\n  Smart3 셋탑임대료 0원';
   }

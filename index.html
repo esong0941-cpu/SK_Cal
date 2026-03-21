@@ -697,7 +697,7 @@ svg{display:inline-block;vertical-align:middle;flex-shrink:0}
       </button>
       <button class="sms-btn sms-btn-send" onclick="sendSMS()">
         <svg class="i14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-        문자발송
+        문자보내기
       </button>
     </div>
     <div class="toast" id="toast">클립보드에 복사되었습니다</div>
@@ -1300,12 +1300,13 @@ function buildSMS(lines,total){
   if(!lines.length){$('sms-box').textContent='안녕하세요 고객님\n방금 상담드린 SK브로드밴드입니다.\n\n설계요금\n(요금 계산 탭에서 선택 후 자동 생성됩니다)\n\n감사합니다.';return;}
   const isBoth=S.svc==='both',isTvOnly=S.svc==='tv_only',isInet=S.svc==='inet';
   const ip=cselVal('inet-plan');
-  const sep='─────────────────';
+  const rn=localStorage.getItem('rep-name')||'';
+  const rp=localStorage.getItem('rep-phone')||'';
+  const soAvailSms=!(S.svc==='both'&&ip==='lan');
 
-  // 가입 상품
+  // ■ 상담상품
   let pl=[];
   if(!isTvOnly&&ip)pl.push(`  인터넷 : ${INET_LB[ip]||''}`);
-  const soAvailSms=!(S.svc==='both'&&ip==='lan');
   for(let i=1;i<=S.tvCount;i++){
     const tp=cselVal(i===1?'tvp1':'tvp'+i),sp=cselVal(i===1?'stb1':'stb'+i);
     const slSms=S.sales[i];const slOkSms=slSms&&slSms.on&&slSms.product!=='none'&&soAvailSms;
@@ -1314,14 +1315,14 @@ function buildSMS(lines,total){
   }
   if(S.phone){const pp=cselVal('phone-plan');pl.push(`  전화 : ${PHONE_LB[pp]||''}`);}
 
-  // 월 요금
+  // ■ 월요금
   let fl=[];
   if(!isTvOnly&&ip){
     const fee=getInetFee(ip);
     if(fee!==null){
       let fs=`  인터넷 : ${fmt(fee)}원`;
       if(S.discount==='baro')fs+=` (바로할인 ${fmt(getBaroDC(ip))}원 적용)`;
-      else if(S.discount==='fam')fs+=` (패밀리 고정요금 적용)`;
+      else if(S.discount==='fam')fs+=` (패밀리 고정요금)`;
       fl.push(fs);
     }
   }
@@ -1335,10 +1336,10 @@ function buildSMS(lines,total){
     if(isTvOnly&&i===1&&tp){
       if(S.sm&&S.gigaMode==='within2y'){
         const s0=TV[tp]?.u2||0,df=TV[tp]?.u1||s0;
-        if(s0!==df)tl+=`\n  (SM BTV 할인요금 ${fmt(s0)}원 → 초고속1년이내 ${fmt(df)}원)`;
+        if(s0!==df)tl+=` (초고속1년이내 TV1요금)`;
       } else if(S.sm){
         const s0=TV[tp]?.solo1||0,df=TV[tp]?.u2||s0;
-        if(s0!==df)tl+=`\n  (일반 ${fmt(s0)}원 → 서비스매니저 BTV 할인요금 ${fmt(df)}원)`;
+        if(s0!==df)tl+=` (서비스매니저 BTV 할인요금)`;
       }
     }
     if(slOkFl&&slFl.product==='moving'&&slFl.payType==='lump'){
@@ -1349,83 +1350,85 @@ function buildSMS(lines,total){
   if(S.phone){const pp=cselVal('phone-plan');fl.push(`  전화 : ${fmt(PHONE_FEE[pp]||0)}원`);}
   const seonapRaw=S.sm?cselVal('seonap-sel'):'0';
   const seonapMonths=seonapRaw==='2200_36'?36:seonapRaw==='2200_24'?24:12;
-  if(S.sm&&seonapRaw!=='0')fl.push(`  한번더 할인 : -2,200원/월 (${seonapMonths}개월간)`);
 
-  // 바로할인 혜택
-  let bs='';
+  // ■ 할인 혜택 (바로할인/선납권/패밀리)
+  let discLines=[];
   if(S.discount==='baro'){
     const dc=getBaroDC(ip),ib=calcInstallFee();
-    bs=`\n[ 바로할인 혜택 ]\n  인터넷 할인 : ${fmt(dc)}원 × 36개월 = ${fmt(dc*36)}원`;
-    if(ib>0)bs+=`\n  출동비 혜택 : ${fmt(ib)}원\n  총 혜택금액 : ${fmt(dc*36+ib)}원`;
+    discLines.push(`  인터넷 바로할인 : ${fmt(dc)}원 × 36개월 = ${fmt(dc*36)}원`);
+    if(ib>0)discLines.push(`  출동비 혜택 : ${fmt(ib)}원`);
   }
+  if(S.discount==='fam') discLines.push(`  패밀리 고정요금 적용`);
+  if(S.sm&&seonapRaw!=='0') discLines.push(`  선납권 할인 : -2,200원/월 (${seonapMonths}개월)`);
 
-  // 사은품
-  let gs2='';
-  if(S.discount!=='baro'){const g=calcGift();if(g>0)gs2=`\n[ 사은품 ]\n  ${fmt(g)}원 상당`;}
+  // ■ 사은품 (별도)
+  let giftLine='';
+  if(S.discount!=='baro'){const g=calcGift();if(g>0)giftLine=`  ${fmt(g)}원 상품권 제공`;}
 
-  // 서비스매니저 혜택
-  let smTxt='';
-  if(S.sm&&isTvOnly&&S.gigaMode==='within2y'){
-    smTxt='\n[ 서비스매니저 혜택 ]\n  출동비 34,100 면제\n  BTV 할인요금 적용 (초고속 1년이내)';
-  } else if(S.sm&&isTvOnly){
-    smTxt='\n[ 서비스매니저 혜택 ]\n  출동비 34,100 면제\n  Smart3 셋탑임대료 0원\n  BTV 할인요금 적용';
-    if(S.gigaMode==='2y')smTxt+='\n  초고속 1년이상 적용';
-  } else if(S.sm){
-    smTxt='\n[ 서비스매니저 혜택 ]\n  출동비 34,100 면제\n  Smart3 셋탑임대료 0원';
+  // ■ 추가 혜택 (SM + 판매상품)
+  let extraLines=[];
+  if(S.sm){
+    if(isTvOnly&&S.gigaMode==='within2y'){
+      extraLines.push(`  서비스매니저 출동비 34,100원 면제`);
+      extraLines.push(`  초고속1년이내 TV1요금 적용`);
+    } else if(S.sm&&isTvOnly){
+      extraLines.push(`  서비스매니저 출동비 34,100원 면제`);
+      extraLines.push(`  Smart3 셋탑임대료 0원`);
+      extraLines.push(`  BTV 할인요금 적용`);
+      if(S.gigaMode==='2y')extraLines.push(`  초고속1년이상 적용`);
+    } else {
+      extraLines.push(`  서비스매니저 출동비 면제`);
+      extraLines.push(`  Smart3 셋탑임대료 0원`);
+    }
   }
-
-  // 판매상품 (TV별)
-  let saleTxt='';
   const soAvail=!(S.svc==='both'&&ip==='lan');
   for(let i=1;i<=S.tvCount;i++){
     const sl=S.sales[i];
     if(!sl||!sl.on||sl.product==='none'||!soAvail)continue;
-    const tvLabel=`TV${i===1?'':i}`;
+    const tvLabel=`BTV${i===1?'':i}`;
     if(sl.product==='moving'){
-      saleTxt+=`\n[ ${tvLabel} 무빙 판매상품 ]`;
-      if(sl.payType==='split') saleTxt+=`\n  분할납부 : Smart3미니 2,200원 + 단말 11,000원/월`;
-      else{saleTxt+=`\n  월 사용료 : Smart3미니 2,200원`;saleTxt+=`\n  일시불 : 360,000원 (1회 청구)`;}
+      if(sl.payType==='split')extraLines.push(`  ${tvLabel} 무빙 분할납부 : Smart3미니 2,200원 + 단말 11,000원/월`);
+      else{extraLines.push(`  ${tvLabel} 무빙 일시불 : Smart3미니 2,200원/월 + 360,000원 1회`);}
     } else if(sl.product==='air4'){
-      saleTxt+=`\n[ ${tvLabel} Air4 판매상품 ]\n  36개월 단말 분할 : 3,300원/월`;
+      extraLines.push(`  ${tvLabel} Air4 단말 분할 : 3,300원/월 (36개월)`);
     } else if(sl.product==='air2'){
-      saleTxt+=`\n[ ${tvLabel} Air2 판매상품 ]\n  단말 할부금 : 0원 (36개월)\n  8,800원 × 36개월 혜택 제공`;
+      extraLines.push(`  ${tvLabel} Air2 : 단말 0원 (8,800원 × 36개월 혜택 제공)`);
     }
   }
 
-  // 약정
-  const cl=S.discount==='baro'
-    ?'  3년 약정 (기간 내 해지 시 할인반환금 청구)'
-    :'  3년 약정 (기간 내 해지 시 할인반환금 청구)\n  단, 1년 이내 해지 시 사은품 추가 할인반환금 청구';
-
-  // 가족결합
-  let gaSection='';
+  // ■ 휴대폰 결합 할인
+  let mobileLines=[];
   if(S.type==='ga'){
     const isLan=ip==='lan';
-    gaSection=`\n[ 가족결합 SKT 핸드폰 기본료 할인 ]\n  1회선 : 3,500원\n  2회선 : 7,000원\n  3회선 : 18,000원\n  4~5회선 : 24,000원`;
-    if(isLan)gaSection+=`\n  ※ 광랜(100M) 결합 시 최대 18,000원`;
-    gaSection+=`\n\n[ 알뜰한결합 안내 ]\n  SK7모바일, 리브모바일, 토스모바일,\n  이야기모바일, 모빙, 스마텔, 아이즈모바일, 티플러스\n  핸드폰 기본료 할인 미적용\n  SK브로드밴드 인터넷 할인율만 적용`;
+    mobileLines.push(`  SKT 핸드폰 기본료 할인`);
+    mobileLines.push(`  1회선 3,500원 / 2회선 7,000원 / 3회선 18,000원 / 4~5회선 24,000원`);
+    if(isLan)mobileLines.push(`  ※ 광랜 결합 시 최대 18,000원`);
+    mobileLines.push(``);
+    mobileLines.push(`  알뜰폰결합 (SK7모바일·리브모바일·토스모바일 등)`);
+    mobileLines.push(`  핸드폰 기본료 할인 미적용 / 인터넷 할인율만 적용`);
   } else if(S.type==='u'){
-    gaSection=`\n[ 알뜰한결합 안내 ]\n  SK7모바일, 리브모바일, 토스모바일,\n  이야기모바일, 모빙, 스마텔, 아이즈모바일, 티플러스\n  핸드폰 기본료 할인 미적용\n  SK브로드밴드 인터넷 할인율만 적용`;
+    mobileLines.push(`  알뜰폰결합 (SK7모바일·리브모바일·토스모바일 등)`);
+    mobileLines.push(`  핸드폰 기본료 할인 미적용 / 인터넷 할인율만 적용`);
   }
 
-  const rn=localStorage.getItem('rep-name')||'';
-  const rp=localStorage.getItem('rep-phone')||'';
-  let msg=`안녕하세요 고객님\n방금 상담 드린 SK브로드밴드 ${rn} 입니다.\n\n`;
-  msg+=`${sep}\n[ 가입 상품 ]\n${pl.join('\n')}\n\n[ 월 요금 ]\n${fl.join('\n')}\n${sep}\n월 납부액 : ${fmt(total)}원 VAT포함\n${sep}\n\n[ 약정 안내 ]\n${cl}`;
-  if(bs)msg+='\n\n'+bs;
-  if(gs2)msg+='\n\n'+gs2;
-  if(smTxt)msg+='\n\n'+smTxt;
-  if(saleTxt)msg+='\n\n'+saleTxt;
-  if(gaSection)msg+='\n\n'+gaSection;
-  msg+='\n\n감사합니다.';
-  // 내 정보 서명 추가
-  if(rn||rp){
-    msg+=`\n${sep}`;
-    if(rn&&rp) msg+=`\n  ${rn} | ${rp}`;
-    else if(rn) msg+=`\n  ${rn}`;
-    else msg+=`\n  ${rp}`;
-    msg+=`\n  SK브로드밴드`;
-  }
+  // ■ 약정
+  const clLine=S.discount==='baro'
+    ?`  3년 약정 (기간 내 해지 시 할인반환금 청구)`
+    :`  3년 약정 (기간 내 해지 시 할인반환금 청구)\n  1년 이내 해지 시 사은품 추가 할인반환금 청구`;
+
+  // 조립
+  let msg=`[SK브로드밴드 가입 안내]\n\n`;
+  msg+=`안녕하세요 고객님\n상담드린 ${rn} 입니다.\n`;
+  msg+=`\n■ 상담상품\n${pl.join('\n')}`;
+  msg+=`\n\n■ 월요금\n${fl.join('\n')}`;
+  msg+=`\n\n  월 납부액 : ${fmt(total)}원 (VAT포함)`;
+  if(discLines.length) msg+=`\n\n■ 할인 혜택\n${discLines.join('\n')}`;
+  if(giftLine) msg+=`\n\n■ 사은품\n${giftLine}`;
+  if(extraLines.length) msg+=`\n\n■ 추가 혜택\n${extraLines.join('\n')}`;
+  if(mobileLines.length) msg+=`\n\n■ 휴대폰 결합 할인\n${mobileLines.join('\n')}`;
+  msg+=`\n\n■ 약정 안내\n${clLine}`;
+  msg+=`\n\n궁금하신 점 언제든 문의 주세요\nSK브로드밴드\n영업부터 개통 AS까지 책임지는 지점`;
+  if(rp)msg+=`\n상담전화 ${rp}`;
   $('sms-box').textContent=msg;
 }
 

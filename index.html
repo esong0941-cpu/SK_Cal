@@ -89,15 +89,16 @@ svg{display:inline-block;vertical-align:middle;flex-shrink:0}
   html,body{overflow:auto}
   .tab-content{padding-bottom:20px;max-width:1200px;margin:0 auto;width:100%}
   .tab-pane{max-width:100%;padding:16px 24px 0}
-  .tab-pane.on{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}
+  .tab-pane.on{display:grid;grid-template-columns:minmax(0,560px) minmax(0,560px);gap:16px;align-items:start}
   .tab-pane.on > .card:first-child{grid-column:1/-1}
   .tab-pane.on > .opt-accordion{grid-column:1/-1}
+  .btn{font-size:13px}
   .sticky{position:relative;border:none;background:transparent;padding:0}
   .sticky-summary{display:none}
   .sticky-cta{width:100%;margin:0;border-radius:14px}
   .hdr{padding:14px 32px 13px}
   .sms-box{max-height:420px}
-  #pane-result.on{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}
+  #pane-result.on{display:grid;grid-template-columns:minmax(0,560px) minmax(0,560px);gap:16px;align-items:start}
   #pane-result.on > .res-card:first-child{grid-column:1/-1}
 }
 
@@ -398,7 +399,7 @@ svg{display:inline-block;vertical-align:middle;flex-shrink:0}
       <div class="g2">
         <button class="btn on" id="btn-inet-solo" onclick="setType('basic')">
           <svg class="i18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
-          <div><span>단독</span><span class="btn-sub">결합없음</span></div>
+          <div><span>핸드폰미결합</span><span class="btn-sub">결합없음</span></div>
         </button>
         <button class="btn" id="btn-inet-ga" onclick="setType('ga')">
           <svg class="i18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
@@ -1174,9 +1175,17 @@ function getSTBFee(sid,isFirst,tvIdx){
 
 function calcGift(){
   if(S.discount==='baro')return 0;
-  if(S.svc!=='both'||S.tvCount===0)return 0;
-  const ip=cselVal('inet-plan'),tp=cselVal('tvp1');
-  if(!ip||!tp)return 0;
+  if(S.svc==='tv_only')return 0;
+  const ip=cselVal('inet-plan');
+  if(!ip)return 0;
+  // 인터넷 단독
+  if(S.svc==='inet'){
+    return ip==='lan'?90000:150000;
+  }
+  // 인터넷+TV
+  if(S.tvCount===0)return 0;
+  const tp=cselVal('tvp1');
+  if(!tp)return 0;
   if(ip==='lan')return tp==='economy'?250000:300000;
   return tp==='all'?400000:tp==='standard'?350000:300000;
 }

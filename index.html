@@ -1371,14 +1371,14 @@ function buildSMS(lines,total){
     if(isTvOnly&&S.gigaMode==='within2y'){
       extraLines.push(`  서비스매니저 출동비 34,100원 면제`);
       extraLines.push(`  초고속1년이내 TV1요금 적용`);
-    } else if(S.sm&&isTvOnly){
+    } else if(isTvOnly){
       extraLines.push(`  서비스매니저 출동비 34,100원 면제`);
       extraLines.push(`  Smart3 셋탑임대료 0원`);
       extraLines.push(`  BTV 할인요금 적용`);
       if(S.gigaMode==='2y')extraLines.push(`  초고속1년이상 적용`);
     } else {
+      // 인터넷+TV: 셋탑임대료 표기 안 함
       extraLines.push(`  서비스매니저 출동비 면제`);
-      extraLines.push(`  Smart3 셋탑임대료 0원`);
     }
   }
   const soAvail=!(S.svc==='both'&&ip==='lan');

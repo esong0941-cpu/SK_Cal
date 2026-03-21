@@ -410,6 +410,7 @@ svg{display:inline-block;vertical-align:middle;flex-shrink:0}
     </div>
 
     <!-- 할인 구분 -->
+    <div id="discount-section">
     <div class="sec-lbl">할인 구분</div>
     <div class="g3">
       <button class="btn on" id="disc-none" onclick="setDiscount('none')">
@@ -428,6 +429,7 @@ svg{display:inline-block;vertical-align:middle;flex-shrink:0}
     <div class="hint" id="disc-info" style="display:none">
       <svg class="i14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
       <span id="disc-hint-text">기본 요금이 적용됩니다.</span>
+    </div>
     </div>
 
     <!-- TV 대수 (인터넷만 선택시 숨김) -->
@@ -851,6 +853,7 @@ function setSvc(v){
   setEl('tv-count-section',el=>el.style.display=isInet?'none':'block');
   // TV만이 아닐 때 "없음" 버튼 복원
   if(!isTv) setEl('tc0',el=>el.style.display='');
+  if(!isTv) setEl('discount-section',el=>el.style.display='');
 
   // 인터넷 섹션
   setEl('inet-sec',el=>el.style.display=isTv?'none':'block');
@@ -876,6 +879,9 @@ function setSvc(v){
     for(let i=0;i<=4;i++)$('tc'+i).classList.toggle('on',i===1);
     setEl('tc0',el=>el.style.display='none');
     S.gigaMode='none';S.giga2y=false;
+    // 할인구분 숨김 + none으로 리셋
+    setEl('discount-section',el=>el.style.display='none');
+    if(S.discount!=='none'){S.discount='none';['disc-none','disc-baro','disc-fam'].forEach(id=>$(id)?.classList.remove('on'));$('disc-none')?.classList.add('on');$('disc-info').style.display='none';}
     syncGiga();
     $('seonap-area').style.display=S.sm?'block':'none';
   } else {

@@ -1442,9 +1442,11 @@ function buildSMS(lines,total){
       if(sl.payType==='split')extraLines.push(`  ${tvLabel} 무빙 분할납부 : Smart3미니 2,200원 + 단말 11,000원/월`);
       else{extraLines.push(`  ${tvLabel} 무빙 일시불 : Smart3미니 2,200원/월 + 360,000원 1회`);}
     } else if(sl.product==='air4'){
-      extraLines.push(`  ${tvLabel} Air4 단말 분할 : 3,300원/월 (36개월)`);
+      extraLines.push(`  갤럭시탭 A11+ 할인 : 5,500원 × 36개월 = ${fmt(5500*36)}원 지원`);
+      extraLines.push(`  제품사양 : https://www.samsung.com/sec/tablets/galaxy-tab-a11-wifi-x230n/SM-X230NZAFKOO/`);
     } else if(sl.product==='air2'){
-      extraLines.push(`  ${tvLabel} Air2 : 단말 0원 (8,800원 × 36개월 혜택 제공)`);
+      extraLines.push(`  갤럭시탭 A7 : 8,800원 × 36개월 = ${fmt(8800*36)}원 지원`);
+      extraLines.push(`  제품사양 : https://www.samsung.com/sec/tablets/galaxy-tab-a7-t500/SM-T500NZSEKOO/`);
     }
   }
 

@@ -1404,11 +1404,15 @@ function buildSMS(lines,total){
     mobileLines.push(`  1회선 3,500원 / 2회선 7,000원 / 3회선 18,000원 / 4~5회선 24,000원`);
     if(isLan)mobileLines.push(`  ※ 광랜 결합 시 최대 18,000원`);
     mobileLines.push(``);
-    mobileLines.push(`  알뜰폰결합 (SK7모바일·리브모바일·토스모바일 등)`);
-    mobileLines.push(`  핸드폰 기본료 할인 미적용 / 인터넷 할인율만 적용`);
+    mobileLines.push(`  알뜰폰결합`);
+    mobileLines.push(`  SK7모바일, 리브모바일, 토스모바일,`);
+    mobileLines.push(`  이야기모바일, 모빙, 스마텔, 아이즈모바일, 티플러스`);
+    mobileLines.push(`  핸드폰 기본료 할인 미적용 / SK브로드밴드 인터넷 할인율만 적용`);
   } else if(S.type==='u'){
-    mobileLines.push(`  알뜰폰결합 (SK7모바일·리브모바일·토스모바일 등)`);
-    mobileLines.push(`  핸드폰 기본료 할인 미적용 / 인터넷 할인율만 적용`);
+    mobileLines.push(`  알뜰폰결합`);
+    mobileLines.push(`  SK7모바일, 리브모바일, 토스모바일,`);
+    mobileLines.push(`  이야기모바일, 모빙, 스마텔, 아이즈모바일, 티플러스`);
+    mobileLines.push(`  핸드폰 기본료 할인 미적용 / SK브로드밴드 인터넷 할인율만 적용`);
   }
 
   // ■ 약정

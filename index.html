@@ -34,8 +34,7 @@ self.addEventListener('fetch',e=>{
 }
 </script>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap');
-
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard-dynamic-subset.css');
 :root{
   --p:#2563EB;
   --p-bg:#EFF6FF;
@@ -54,13 +53,14 @@ self.addEventListener('fetch',e=>{
 
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;overflow:hidden}
-body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--g900);display:flex;flex-direction:column}
+body{font-family:'Pretendard',-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;background:var(--bg);color:var(--g900);display:flex;flex-direction:column}
 
 /* SVG 공통 */
 svg{display:inline-block;vertical-align:middle;flex-shrink:0}
 
 /* ── HEADER ── */
 .hdr{background:var(--w);padding:11px 18px 10px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--bd);flex-shrink:0}
+.hdr-inner{display:flex;align-items:center;justify-content:space-between;width:100%;max-width:1200px;margin:0 auto}
 .hdr-l{display:flex;align-items:center;gap:8px}
 .hdr-logo{background:var(--red);color:#fff;font-size:11px;font-weight:900;padding:3px 8px;border-radius:6px;letter-spacing:.5px}
 .hdr-title{font-size:15px;font-weight:800;color:var(--g900)}
@@ -81,8 +81,25 @@ svg{display:inline-block;vertical-align:middle;flex-shrink:0}
 
 /* ── SCROLL ── */
 .tab-content{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:120px}
-.tab-pane{display:none;padding:12px 12px 0;max-width:480px;margin:0 auto}
+.tab-pane{display:none;padding:12px 12px 0;max-width:520px;margin:0 auto}
 .tab-pane.on{display:block}
+
+/* ── 태블릿/PC 반응형 ── */
+@media(min-width:720px){
+  html,body{overflow:auto}
+  .tab-content{padding-bottom:20px;max-width:1200px;margin:0 auto;width:100%}
+  .tab-pane{max-width:100%;padding:16px 24px 0}
+  .tab-pane.on{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}
+  .tab-pane.on > .card:first-child{grid-column:1/-1}
+  .tab-pane.on > .opt-accordion{grid-column:1/-1}
+  .sticky{position:relative;border:none;background:transparent;padding:0}
+  .sticky-summary{display:none}
+  .sticky-cta{width:100%;margin:0;border-radius:14px}
+  .hdr{padding:14px 32px 13px}
+  .sms-box{max-height:420px}
+  #pane-result.on{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}
+  #pane-result.on > .res-card:first-child{grid-column:1/-1}
+}
 
 /* ── CARD ── */
 .card{background:var(--w);border-radius:var(--card-r);padding:16px;margin-bottom:10px;box-shadow:var(--card-sh)}
@@ -137,15 +154,15 @@ svg{display:inline-block;vertical-align:middle;flex-shrink:0}
 
 /* ── 옵션 토글 ── */
 .opt-item{
-  display:flex;align-items:center;gap:10px;
-  padding:11px 13px;border-radius:10px;
+  display:flex;align-items:center;gap:7px;
+  padding:8px 10px;border-radius:10px;
   border:none;background:var(--g100);
   cursor:pointer;transition:background .14s,box-shadow .14s;
 }
-.opt-item svg{stroke:var(--g500);transition:stroke .14s;width:18px;height:18px;flex-shrink:0}
+.opt-item svg{stroke:var(--g500);transition:stroke .14s;width:15px;height:15px;flex-shrink:0}
 .opt-info{flex:1}
-.opt-name{font-size:12px;font-weight:700;color:var(--g500);display:block;transition:color .14s}
-.opt-desc{font-size:10px;color:var(--g400);display:block;margin-top:2px}
+.opt-name{font-size:11px;font-weight:700;color:var(--g500);display:block;transition:color .14s}
+.opt-desc{font-size:10px;color:var(--g400);display:block;margin-top:1px}
 .opt-item.on-sm,.opt-item.on-teal,.opt-item.on-phone{
   background:var(--p);box-shadow:0 3px 10px rgba(37,99,235,.3);
 }
@@ -207,67 +224,75 @@ svg{display:inline-block;vertical-align:middle;flex-shrink:0}
 
 /* 소계 행 */
 .subtot-row{display:flex;justify-content:space-between;align-items:center;background:var(--g100);border-radius:10px;padding:10px 14px;margin-top:10px}
-.subtot-lbl{font-size:10px;font-weight:700;color:var(--g500)}
-.subtot-val{font-size:16px;font-weight:900;color:var(--g900)}
-.subtot-val.dim{color:#D1D5DB;font-size:13px;font-weight:500}
-.subtot-val.blue{color:var(--p)}
-.subtot-unit{font-size:11px;font-weight:600;color:var(--g500);margin-left:2px}
+/* subtot/tv → 아래 통일 스타일 적용 */
+.tv-sn{font-size:11px;color:var(--g400)}
+.tv-item-tot{font-size:13px;font-weight:800;color:var(--g900)}
+.no-tv{text-align:center;padding:14px 0;font-size:13px;color:var(--g400)}
 
 /* 할인 태그 */
-.dc-tag{display:inline-flex;align-items:center;gap:4px;border-radius:6px;padding:3px 8px;font-size:10px;font-weight:700;margin-top:6px;background:var(--p-bg);color:var(--p)}
+.dc-tag{display:inline-flex;align-items:center;gap:4px;border-radius:6px;padding:3px 8px;font-size:11px;font-weight:700;margin-top:6px;background:var(--p-bg);color:var(--p)}
 
 /* TV g2 */
 .tv-g2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
 .tv-extra-item{border-top:1px solid var(--bd);padding:14px 0 4px;animation:fadeUp .18s ease}
 .tv-extra-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
-.tv-dot-lbl{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:var(--g700)}
-.tv-dot{width:20px;height:20px;border-radius:50%;font-size:9px;font-weight:800;color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.tv-sn{font-size:10px;color:var(--g400)}
-.tv-item-tot{font-size:14px;font-weight:800;color:var(--g900)}
-.tv-fl{font-size:9px;font-weight:700;color:var(--g400);letter-spacing:.3px;margin-bottom:3px}
-.tv-fv{font-size:14px;font-weight:800;color:var(--g900)}
-.tv-fv.dim{color:#D1D5DB}
-.no-tv{text-align:center;padding:14px 0;font-size:12px;color:var(--g400)}
 
 /* ── 결과 탭 ── */
 .res-card{background:var(--w);border-radius:var(--card-r);margin-bottom:10px;box-shadow:var(--card-sh);overflow:hidden}
-.res-hd{display:flex;align-items:center;gap:8px;padding:14px 16px;border-bottom:1px solid var(--bd)}
+.res-hd{display:flex;align-items:center;gap:8px;padding:12px 16px;border-bottom:1px solid var(--bd)}
 .res-hd svg{stroke:var(--g400);width:16px;height:16px}
-.res-title{font-size:13px;font-weight:800;color:var(--g900)}
 .bdgs{display:flex;gap:4px;margin-left:auto;flex-wrap:wrap;justify-content:flex-end}
-.bdg{font-size:9px;font-weight:700;padding:3px 8px;border-radius:20px;background:var(--p-bg);color:var(--p)}
+
+/* ── 결과탭 폰트 통일 ── */
+.res-title{font-size:13px;font-weight:800;color:var(--g900)}
+.bdg{font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;background:var(--p-bg);color:var(--p)}
 .bdg-ga{background:#FEF2F2;color:var(--red)}
 
-.benefit-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:14px 16px}
-.bx{border-radius:12px;padding:12px;text-align:center;background:var(--g100)}
+.benefit-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:12px 16px}
+.bx{border-radius:12px;padding:10px;text-align:center;background:var(--g100)}
 .bx.active{background:var(--p-bg)}
-.bx-lbl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px;color:var(--g500)}
+.bx-lbl{font-size:11px;font-weight:700;margin-bottom:4px;color:var(--g500)}
 .bx.active .bx-lbl{color:var(--p)}
-.bx-val{font-size:17px;font-weight:900;color:var(--g900)}
+.bx-val{font-size:18px;font-weight:900;color:var(--g900)}
 .bx-val.dim{color:#D1D5DB;font-size:13px;font-weight:500}
 .bx.active .bx-val{color:var(--p)}
-.bx-sub{font-size:9px;color:var(--g400);margin-top:3px;line-height:1.35}
+.bx-sub{font-size:11px;color:var(--g400);margin-top:2px;line-height:1.35}
 
 .sum-rows{padding:2px 16px 0}
-.si{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #F3F4F6}
+.si{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid #F3F4F6}
 .si:last-child{border-bottom:none}
 .si-l{display:flex;align-items:center;gap:7px;flex:1;margin-right:8px}
 .si-l svg{width:14px;height:14px;stroke:var(--g400);flex-shrink:0}
-.si-key{font-size:12px;font-weight:700;color:var(--g700)}
-.si-plan{font-size:10px;color:var(--g400);margin-left:4px}
-.si-val{font-size:14px;font-weight:800;color:var(--g900);white-space:nowrap}
-.si-val.dim{color:#D1D5DB;font-weight:400;font-size:12px}
+.si-key{font-size:13px;font-weight:700;color:var(--g700)}
+.si-plan{font-size:11px;color:var(--g400);margin-left:4px}
+.si-val{font-size:13px;font-weight:800;color:var(--g900);white-space:nowrap}
+.si-val.dim{color:#D1D5DB;font-weight:400;font-size:13px}
 .si-val.blue{color:var(--p)}
 .si-val.minus{color:var(--red)}
 
-.total-strip{display:flex;justify-content:space-between;align-items:center;background:var(--g900);border-radius:12px;padding:16px 18px;margin:10px 16px 16px}
-.tl{color:rgba(255,255,255,.5);font-size:12px;font-weight:600}
-.tv-amt{color:#fff;font-size:24px;font-weight:900;letter-spacing:-.5px}
-.tv-amt small{font-size:13px;font-weight:500;opacity:.6}
+/* 월납부액 칸 축소 */
+.total-strip{display:flex;justify-content:space-between;align-items:center;background:var(--g900);border-radius:12px;padding:11px 16px;margin:8px 16px 12px}
+.tl{color:rgba(255,255,255,.6);font-size:12px;font-weight:600}
+.tv-amt{color:#fff;font-size:20px;font-weight:900;letter-spacing:-.5px}
+.tv-amt small{font-size:12px;font-weight:500;opacity:.6}
+
+/* subtot */
+.subtot-lbl{font-size:11px;font-weight:700;color:var(--g500)}
+.subtot-val{font-size:15px;font-weight:900;color:var(--g900)}
+.subtot-val.dim{color:#D1D5DB;font-size:13px;font-weight:500}
+.subtot-val.blue{color:var(--p)}
+.subtot-unit{font-size:11px;font-weight:600;color:var(--g500);margin-left:2px}
+
+/* TV extra */
+.tv-dot-lbl{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:var(--g700)}
+.tv-dot{width:18px;height:18px;border-radius:50%;font-size:9px;font-weight:800;color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.tv-fl{font-size:11px;font-weight:700;color:var(--g400);letter-spacing:.2px;margin-bottom:3px}
+.tv-fv{font-size:13px;font-weight:800;color:var(--g900)}
+.tv-fv.dim{color:#D1D5DB}
 
 /* ── 문자 카드 ── */
 .sms-input-wrap{padding:12px 16px 8px}
-.sms-box{background:#F8FAFF;border:1.5px solid var(--bd);border-radius:10px;padding:12px 14px;font-size:11.5px;line-height:1.85;color:var(--g900);white-space:pre-wrap;font-family:'Noto Sans KR',sans-serif;margin:0 16px 12px;max-height:260px;overflow-y:auto}
+.sms-box{background:#F8FAFF;border:1.5px solid var(--bd);border-radius:10px;padding:12px 14px;font-size:11.5px;line-height:1.85;color:var(--g900);white-space:pre-wrap;font-family:'Pretendard',-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;margin:0 16px 12px;max-height:260px;overflow-y:auto}
 .sms-btns{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:0 16px 14px}
 .sms-btn{padding:13px 0;border:none;border-radius:12px;font-family:inherit;font-size:13px;font-weight:800;cursor:pointer;transition:transform .15s;color:#fff;display:flex;align-items:center;justify-content:center;gap:6px}
 .sms-btn:active{transform:scale(.97)}
@@ -351,21 +376,17 @@ svg{display:inline-block;vertical-align:middle;flex-shrink:0}
 
     <div class="dv"></div>
 
-    <!-- 결합 유형: 인터넷+TV용 (기본/요우결/요가결) -->
+    <!-- 결합 유형: 인터넷+TV용 (핸드폰미결합/핸드폰결합) -->
     <div id="type-section" style="display:none">
       <div class="sec-lbl">결합 유형</div>
-      <div class="g3">
-        <button class="btn" id="btn-basic" onclick="setType('basic')">
-          <svg class="i18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
-          <div><span>기본</span><span class="btn-sub">결합없음</span></div>
-        </button>
+      <div class="g2">
         <button class="btn on" id="btn-u" onclick="setType('u')">
           <svg class="i18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-          <div><span>요우결</span><span class="btn-sub">폰 미결합</span></div>
+          <div><span>핸드폰미결합</span><span class="btn-sub">폰 미결합</span></div>
         </button>
         <button class="btn" id="btn-ga" onclick="setType('ga')">
           <svg class="i18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-          <div><span>요가결</span><span class="btn-sub">폰 결합</span></div>
+          <div><span>핸드폰결합</span><span class="btn-sub">폰 결합</span></div>
         </button>
       </div>
       <div class="dv"></div>
@@ -381,7 +402,7 @@ svg{display:inline-block;vertical-align:middle;flex-shrink:0}
         </button>
         <button class="btn" id="btn-inet-ga" onclick="setType('ga')">
           <svg class="i18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-          <div><span>요가결</span><span class="btn-sub">폰 결합</span></div>
+          <div><span>핸드폰결합</span><span class="btn-sub">폰 결합</span></div>
         </button>
       </div>
       <div class="dv"></div>
@@ -437,28 +458,24 @@ svg{display:inline-block;vertical-align:middle;flex-shrink:0}
     <div class="opt-acc-body open" id="acc-body">
       <div class="g3" style="gap:8px">
         <div class="opt-item" id="sm-toggle" onclick="toggleSM()">
-          <svg class="i18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
           <div class="opt-info">
             <span class="opt-name" id="sm-txt">서비스매니저</span>
             <span class="opt-desc" id="sm-sub">셋탑·출동비</span>
           </div>
         </div>
         <div class="opt-item" id="giga2y-wrap" onclick="setGigaMode('2y')">
-          <svg class="i18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
           <div class="opt-info">
             <span class="opt-name">초고속1년이상</span>
             <span class="opt-desc" id="giga2y-sub">해당 시 선택</span>
           </div>
         </div>
         <div class="opt-item" id="gigaW2y-wrap" onclick="setGigaMode('within2y')">
-          <svg class="i18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
           <div class="opt-info">
             <span class="opt-name">초고속1년이내</span>
             <span class="opt-desc" id="gigaW2y-sub">해당 시 선택</span>
           </div>
         </div>
         <div class="opt-item" id="phone-toggle" onclick="togglePhone()" style="grid-column:1/-1">
-          <svg class="i18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.27h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-.76a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 17z"/></svg>
           <div class="opt-info">
             <span class="opt-name" id="phone-name">전화 추가</span>
             <span class="opt-desc" id="phone-sub-lbl">SKB 인터넷전화</span>
@@ -468,15 +485,15 @@ svg{display:inline-block;vertical-align:middle;flex-shrink:0}
       <div class="opt-note" id="opt-note" style="display:none"></div>
     </div>
 
-    <!-- 선납권 -->
+    <!-- 프로모션 -->
     <div id="seonap-area" style="display:none" class="expand-area">
       <div class="expand-lbl">
         <svg class="i14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2z"/></svg>
-        선납권 할인
+        프로모션 할인
       </div>
       <div class="csel-wrap">
         <button class="csel-trigger" id="seonap-sel-trigger" onclick="openCsel('seonap-sel')">
-          <span id="seonap-sel-label">선납권 없음</span>
+          <span id="seonap-sel-label">프로모션 없음</span>
           <span class="csel-arrow"><svg class="i14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span>
         </button>
       </div>
@@ -556,7 +573,7 @@ svg{display:inline-block;vertical-align:middle;flex-shrink:0}
       <div class="si" id="sum-seonap-row" style="display:none">
         <div class="si-l">
           <svg class="i14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2z"/></svg>
-          <span class="si-key">선납권 할인</span>
+          <span class="si-key">프로모션 할인</span>
         </div>
         <span class="si-val minus" id="sum-seonap">-</span>
       </div>
@@ -583,8 +600,8 @@ svg{display:inline-block;vertical-align:middle;flex-shrink:0}
 <!-- ══ TAB 2: 결과 & 문자 ══ -->
 <div class="tab-pane" id="pane-result">
 
-  <!-- 혜택 -->
-  <div class="res-card">
+  <!-- 혜택 요약 (숨김) -->
+  <div class="res-card" style="display:none">
     <div class="res-hd">
       <svg class="i14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>
       <span class="res-title">혜택 요약</span>
@@ -609,7 +626,7 @@ svg{display:inline-block;vertical-align:middle;flex-shrink:0}
       <svg class="i14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
       <span class="res-title">월 납부 요금</span>
       <div class="bdgs">
-        <span class="bdg" id="bdg-type2">요우결</span>
+        <span class="bdg" id="bdg-type2">핸드폰미결합</span>
         <span class="bdg" id="bdg-disc2" style="display:none"></span>
         <span class="bdg" id="bdg-sm2" style="display:none">SM</span>
         <span class="bdg" id="bdg-giga2" style="display:none">초고속1년+</span>
@@ -627,7 +644,7 @@ svg{display:inline-block;vertical-align:middle;flex-shrink:0}
       <div class="si" id="sum-seonap-row2" style="display:none">
         <div class="si-l">
           <svg class="i14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2z"/></svg>
-          <span class="si-key">선납권 할인</span><span class="si-plan">2,200원×12개월</span>
+          <span class="si-key">프로모션 할인</span><span class="si-plan">2,200원×12개월</span>
         </div>
         <span class="si-val minus" id="sum-seonap2">-</span>
       </div>
@@ -656,6 +673,17 @@ svg{display:inline-block;vertical-align:middle;flex-shrink:0}
       <div style="font-size:10px;font-weight:700;color:var(--g400);margin-bottom:8px;display:flex;align-items:center;justify-content:space-between">
         <span>내 정보 (저장됨)</span>
         <button onclick="saveRepInfo()" style="border:none;background:var(--p);color:#fff;font-family:inherit;font-size:10px;font-weight:700;padding:4px 10px;border-radius:6px;cursor:pointer">저장</button>
+      </div>
+      <!-- 호칭 + 약정기간 한 줄 -->
+      <div style="margin-bottom:10px">
+        <div style="display:flex;gap:5px;flex-wrap:nowrap;align-items:center;overflow-x:auto">
+          <button id="prefix-btn-0" onclick="setRepPrefix('상담드린')" style="padding:5px 10px;border-radius:8px;border:1.5px solid var(--p);background:var(--p);color:#fff;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0">상담드린</button>
+          <button id="prefix-btn-1" onclick="setRepPrefix('방문한 서비스매니저')" style="padding:5px 10px;border-radius:8px;border:1.5px solid var(--bd);background:#fff;color:var(--g500);font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0">방문한SM</button>
+          <div id="term-divider" style="width:1px;height:16px;background:var(--bd);flex-shrink:0;display:none"></div>
+          <button id="term-btn-1" onclick="setContractTerm(1)" style="padding:5px 10px;border-radius:8px;border:1.5px solid var(--bd);background:#fff;color:var(--g500);font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0;display:none">1년</button>
+          <button id="term-btn-2" onclick="setContractTerm(2)" style="padding:5px 10px;border-radius:8px;border:1.5px solid var(--bd);background:#fff;color:var(--g500);font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0;display:none">2년</button>
+          <button id="term-btn-3" onclick="setContractTerm(3)" style="padding:5px 10px;border-radius:8px;border:1.5px solid var(--p);background:var(--p);color:#fff;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0;display:none">3년</button>
+        </div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
         <div>
@@ -736,7 +764,7 @@ svg{display:inline-block;vertical-align:middle;flex-shrink:0}
 // ── 드롭다운
 const CSEL_DEFS = {
   'inet-plan':{title:'인터넷 요금제',options:[{value:'',label:'선택하세요'},{value:'lite',label:'기가라이트인터넷 와이파이'},{value:'giga',label:'기가인터넷 와이파이'},{value:'lan',label:'광랜인터넷 와이파이'}],value:''},
-  'seonap-sel':{title:'선납권',options:[{value:'0',label:'선납권 없음'},{value:'2200',label:'선납권 (2,200원 × 12개월)'},{value:'2200_24',label:'선납권 (2,200원 × 24개월)'},{value:'2200_36',label:'선납권 (2,200원 × 36개월)'}],value:'0'},
+  'seonap-sel':{title:'프로모션',options:[{value:'0',label:'프로모션 없음'},{value:'2200',label:'프로모션 (2,200원 × 12개월)'},{value:'2200_24',label:'프로모션 (2,200원 × 24개월)'},{value:'2200_36',label:'프로모션 (2,200원 × 36개월)'}],value:'0'},
   'phone-plan':{title:'전화 요금제',options:[{value:'skb1',label:'SKB 인터넷전화 (기본)'},{value:'skb2',label:'SKB 인터넷전화 (프리미엄)'}],value:'skb1'},
 };
 let _activeCsel=null;
@@ -787,8 +815,9 @@ const TV_DOTC=['','#2563EB','#6B7280','#374151','#111827'];
 // S.sales[i]: { on, product, payType } — TV 대수별 판매상품 (1~4)
 function mkSale(){return {on:false,product:'none',payType:'split'};}
 let S={type:'u',discount:'none',svc:'both',sm:false,giga2y:false,gigaMode:'none',tvCount:1,phone:false,
-       sale:{on:false,product:'none',payType:'split'}, // TV1 (하위호환)
-       sales:[null,mkSale(),mkSale(),mkSale(),mkSale()]}; // index 1~4
+       sale:{on:false,product:'none',payType:'split'},
+       sales:[null,mkSale(),mkSale(),mkSale(),mkSale()],
+       smTerm:3}; // TV만+SM 약정기간 (년)
 const fmt=n=>n.toLocaleString('ko-KR');
 const $=id=>document.getElementById(id);
 const setEl=(id,fn)=>{const el=$(id);if(el)fn(el);};
@@ -853,20 +882,20 @@ function setSvc(v){
     S.giga2y=false;S.gigaMode='none';syncGiga();
     setEl('opt-note',el=>el.style.display='none');
     if(S.tvCount===0){S.tvCount=1;for(let i=0;i<=4;i++)$('tc'+i).classList.toggle('on',i===1);}
-    // 인터넷+TV: 이전이 inet이었으면 요우결로 전환, 아니면 유지
+    // 인터넷+TV: basic 없음, u가 기본
     if(S.svc==='inet'||S.type==='basic') S.type='u';
-    ['btn-basic','btn-u','btn-ga'].forEach(id=>{const el=$(id);if(el)el.classList.remove('on');});
-    const activeBtn='btn-'+(S.type==='basic'?'basic':S.type==='ga'?'ga':'u');
+    ['btn-u','btn-ga'].forEach(id=>{const el=$(id);if(el)el.classList.remove('on');});
+    const activeBtn='btn-'+(S.type==='ga'?'ga':'u');
     $(activeBtn)?.classList.add('on');
   }
-  renderTV();calcAll();
+  syncTermButtons();renderTV();calcAll();
 }
 
 // ── 결합유형 (basic/u/ga)
 function setType(t){
   S.type=t;
   // 인터넷+TV 버튼
-  ['btn-basic','btn-u','btn-ga'].forEach(id=>{const el=$(id);if(el)el.classList.remove('on');});
+  ['btn-u','btn-ga'].forEach(id=>{const el=$(id);if(el)el.classList.remove('on');});
   const bothBtn='btn-'+(t==='basic'?'basic':t==='ga'?'ga':'u');
   $(bothBtn)?.classList.add('on');
   // 인터넷 단독 버튼
@@ -874,7 +903,7 @@ function setType(t){
   if(t==='basic') $('btn-inet-solo')?.classList.add('on');
   if(t==='ga') $('btn-inet-ga')?.classList.add('on');
   // 배지
-  const lbl={basic:'기본',u:'요우결',ga:'요가결'}[t]||'';
+  const lbl={basic:'기본',u:'핸드폰미결합',ga:'핸드폰결합'}[t]||'';
   const cls=t==='ga'?'bdg bdg-ga':'bdg';
   setEl('bdg-type2',el=>{el.textContent=lbl;el.className=cls;});
   calcAll();
@@ -891,7 +920,7 @@ function setDiscount(d){
   else $('disc-fam').classList.add('on');
 
   const hintEl=$('disc-info');
-  const hints={none:'',baro:'바로할인 : 인터넷 기본료에서 할인 반영',fam:'패밀리 : 고정 요금 적용 (바로할인·요가결 적용 불가)'};
+  const hints={none:'',baro:'바로할인 : 인터넷 기본료에서 할인 반영',fam:'패밀리 : 고정 요금 적용 (바로할인·핸드폰결합 적용 불가)'};
   if(d==='none'){hintEl.style.display='none';}
   else{$('disc-hint-text').textContent=hints[d];hintEl.style.display='flex';}
   const bdgMap={baro:'바로할인',fam:'패밀리'};
@@ -906,6 +935,15 @@ function setTv(n){
   renderTV();calcAll();
 }
 
+function setSmTerm(t){
+  S.smTerm=t;
+  [1,2,3].forEach(n=>{
+    const btn=$('smterm-'+n);if(!btn)return;
+    btn.classList.toggle('on',n===t);
+  });
+  calcAll();
+}
+
 // ── SM
 function toggleSM(){S.sm=!S.sm;syncSM();syncGiga();renderTV();calcAll();}
 function syncSM(){
@@ -913,7 +951,7 @@ function syncSM(){
   $('sm-toggle').className=S.sm?'opt-item on-sm':'opt-item';
   setEl('sm-sub',el=>el.textContent=S.sm&&isTv?'TV2요금·Smart3 0원·출동비면제':'셋탑·출동비');
   $('seonap-area').style.display=(S.sm&&isTv)?'block':'none';
-  if(!S.sm){if(CSEL_DEFS['seonap-sel'])CSEL_DEFS['seonap-sel'].value='0';setEl('seonap-sel-label',el=>el.textContent='선납권 없음');setEl('seonap-tbl-wrap',el=>el.style.display='none');['sum-seonap-row','sum-seonap-row2'].forEach(id=>setEl(id,el=>el.style.display='none'));}
+  if(!S.sm){if(CSEL_DEFS['seonap-sel'])CSEL_DEFS['seonap-sel'].value='0';setEl('seonap-sel-label',el=>el.textContent='프로모션 없음');setEl('seonap-tbl-wrap',el=>el.style.display='none');['sum-seonap-row','sum-seonap-row2'].forEach(id=>setEl(id,el=>el.style.display='none'));}
   ['bdg-sm2'].forEach(id=>setEl(id,el=>el.style.display=S.sm?'':'none'));
   updateOptNote();
 }
@@ -1244,7 +1282,7 @@ function calcAll(){
   if(S.sm&&seonap>0){
     ['sum-seonap-row','sum-seonap-row2'].forEach(id=>setEl(id,el=>el.style.display='flex'));
     ['sum-seonap','sum-seonap2'].forEach(id=>setEl(id,el=>el.textContent='-'+fmt(seonap)+'원/월'));
-    total-=seonap;smsLines.push(`선납권 할인 : -${fmt(seonap)}원/월`);
+    total-=seonap;smsLines.push(`프로모션 할인 : -${fmt(seonap)}원/월`);
   }
 
   // 전화
@@ -1302,6 +1340,7 @@ function buildSMS(lines,total){
   const ip=cselVal('inet-plan');
   const rn=localStorage.getItem('rep-name')||'';
   const rp=localStorage.getItem('rep-phone')||'';
+  const rpx=localStorage.getItem('rep-prefix')||'상담드린';
   const soAvailSms=!(S.svc==='both'&&ip==='lan');
 
   // ■ 상담상품
@@ -1332,34 +1371,28 @@ function buildSMS(lines,total){
     if(!tp&&!sp&&!slOkFl)continue;
     const tvf=getTVFee(tp,i===1),sf=getSTBFee(sp,i===1,i);
     const saleExFl=slOkFl?getSaleExtraForIdx(i):0;
-    let tl=`  BTV${i===1?'':i} : ${fmt(tvf+sf+saleExFl)}원`;
-    if(isTvOnly&&i===1&&tp){
-      if(S.sm&&S.gigaMode==='within2y'){
-        const s0=TV[tp]?.u2||0,df=TV[tp]?.u1||s0;
-        if(s0!==df)tl+=` (초고속1년이내 TV1요금)`;
-      } else if(S.sm){
-        const s0=TV[tp]?.solo1||0,df=TV[tp]?.u2||s0;
-        if(s0!==df)tl+=` (서비스매니저 BTV 할인요금)`;
-      }
+    let tl=`  BTV${i===1?'':i} : ${fmt(tvf+sf)}원`;
+    // 판매상품 분할금 별도 표기
+    if(slOkFl){
+      if(slFl.product==='moving'&&slFl.payType==='split') tl+=`\n  무빙 단말 분할금 : 11,000원/월 (36개월)`;
+      else if(slFl.product==='air4') tl+=`\n  Air4 단말 분할금 : 3,300원/월 (36개월)`;
     }
-    if(slOkFl&&slFl.product==='moving'&&slFl.payType==='lump'){
-      tl+=`\n  일시불 : 360,000원 (1회 청구)`;
-    }
+    if(slOkFl&&slFl.product==='moving'&&slFl.payType==='lump') tl+=`\n  일시불 : 360,000원 (1회 청구)`;
     fl.push(tl);
   }
   if(S.phone){const pp=cselVal('phone-plan');fl.push(`  전화 : ${fmt(PHONE_FEE[pp]||0)}원`);}
   const seonapRaw=S.sm?cselVal('seonap-sel'):'0';
   const seonapMonths=seonapRaw==='2200_36'?36:seonapRaw==='2200_24'?24:12;
 
-  // ■ 할인 혜택 (바로할인/선납권/패밀리)
+  // ■ 할인 혜택 (바로할인/선납권/패밀리) — TV만 선택 시 바로할인 표기 안 함
   let discLines=[];
-  if(S.discount==='baro'){
+  if(S.discount==='baro'&&!isTvOnly){
     const dc=getBaroDC(ip),ib=calcInstallFee();
     discLines.push(`  인터넷 바로할인 : ${fmt(dc)}원 × 36개월 = ${fmt(dc*36)}원`);
     if(ib>0)discLines.push(`  출동비 혜택 : ${fmt(ib)}원`);
   }
   if(S.discount==='fam') discLines.push(`  패밀리 고정요금 적용`);
-  if(S.sm&&seonapRaw!=='0') discLines.push(`  선납권 할인 : -2,200원/월 (${seonapMonths}개월)`);
+  if(S.sm&&seonapRaw!=='0') discLines.push(`  프로모션 할인 : -2,200원/월 (${seonapMonths}개월 후 정상요금 적용)`);
 
   // ■ 사은품 (별도)
   let giftLine='';
@@ -1367,17 +1400,21 @@ function buildSMS(lines,total){
 
   // ■ 추가 혜택 (SM + 판매상품)
   let extraLines=[];
+  const termYr=parseInt(localStorage.getItem('contract-term')||'3');
+  // Air 판매장비 선택 여부 확인
+  const hasAirSale=S.sales.some((sl,i)=>i>0&&sl&&sl.on&&(sl.product==='air4'||sl.product==='air2'));
   if(S.sm){
+    const smMonths=termYr*12;
     if(isTvOnly&&S.gigaMode==='within2y'){
       extraLines.push(`  서비스매니저 출동비 34,100원 면제`);
       extraLines.push(`  초고속1년이내 TV1요금 적용`);
     } else if(isTvOnly){
       extraLines.push(`  서비스매니저 출동비 34,100원 면제`);
-      extraLines.push(`  Smart3 셋탑임대료 0원`);
-      extraLines.push(`  BTV 할인요금 적용`);
-      if(S.gigaMode==='2y')extraLines.push(`  초고속1년이상 적용`);
+      // Air 판매장비 선택 시 셋탑임대료 면제 표기 안 함
+      if(!hasAirSale){
+        extraLines.push(`  Smart3 셋탑임대료 면제 : 4,400원 × ${smMonths}개월 = ${fmt(4400*smMonths)}원`);
+      }
     } else {
-      // 인터넷+TV: 셋탑임대료 표기 안 함
       extraLines.push(`  서비스매니저 출동비 면제`);
     }
   }
@@ -1396,46 +1433,80 @@ function buildSMS(lines,total){
     }
   }
 
-  // ■ 휴대폰 결합 할인
+  // ■ 휴대폰 결합 할인 (핸드폰결합 - 요가결만)
   let mobileLines=[];
   if(S.type==='ga'){
     const isLan=ip==='lan';
     mobileLines.push(`  SKT 핸드폰 기본료 할인`);
     mobileLines.push(`  1회선 3,500원 / 2회선 7,000원 / 3회선 18,000원 / 4~5회선 24,000원`);
     if(isLan)mobileLines.push(`  ※ 광랜 결합 시 최대 18,000원`);
-    mobileLines.push(``);
-    mobileLines.push(`  알뜰폰결합`);
-    mobileLines.push(`  SK7모바일, 리브모바일, 토스모바일,`);
-    mobileLines.push(`  이야기모바일, 모빙, 스마텔, 아이즈모바일, 티플러스`);
-    mobileLines.push(`  핸드폰 기본료 할인 미적용 / SK브로드밴드 인터넷 할인율만 적용`);
-  } else if(S.type==='u'){
-    mobileLines.push(`  알뜰폰결합`);
-    mobileLines.push(`  SK7모바일, 리브모바일, 토스모바일,`);
-    mobileLines.push(`  이야기모바일, 모빙, 스마텔, 아이즈모바일, 티플러스`);
-    mobileLines.push(`  핸드폰 기본료 할인 미적용 / SK브로드밴드 인터넷 할인율만 적용`);
+  }
+
+  // ■ 알뜰폰결합 안내 (요가결/요우결)
+  let altelLines=[];
+  if(S.type==='ga'||S.type==='u'){
+    altelLines.push(`  SK7모바일, 리브모바일, 토스모바일,`);
+    altelLines.push(`  이야기모바일, 모빙, 스마텔, 아이즈모바일, 티플러스`);
+    altelLines.push(`  핸드폰 기본료 할인 미적용 / SK브로드밴드 인터넷 할인율만 적용`);
   }
 
   // ■ 약정
+  const hasGift=calcGift()>0&&S.discount!=='baro';
   const clLine=S.discount==='baro'
-    ?`  3년 약정 (기간 내 해지 시 할인반환금 청구)`
-    :`  3년 약정 (기간 내 해지 시 할인반환금 청구)\n  1년 이내 해지 시 사은품 추가 할인반환금 청구`;
+    ?`  ${termYr}년 약정 (기간 내 해지 시 할인반환금 청구)`
+    :hasGift
+      ?`  ${termYr}년 약정 (기간 내 해지 시 할인반환금 청구)\n  1년 이내 해지 시 사은품 추가 할인반환금 청구`
+      :`  ${termYr}년 약정 (기간 내 해지 시 할인반환금 청구)`;
 
   // 조립
   let msg=`[SK브로드밴드 가입 안내]\n\n`;
-  msg+=`안녕하세요 고객님\n상담드린 ${rn} 입니다.\n`;
+  msg+=`안녕하세요 고객님\n${rpx} ${rn} 입니다.\n`;
   msg+=`\n■ 상담상품\n${pl.join('\n')}`;
   msg+=`\n\n■ 월요금\n${fl.join('\n')}`;
   msg+=`\n\n  월 납부액 : ${fmt(total)}원 (VAT포함)`;
   if(discLines.length) msg+=`\n\n■ 할인 혜택\n${discLines.join('\n')}`;
   if(giftLine) msg+=`\n\n■ 사은품\n${giftLine}`;
+  msg+=`\n\n■ 약정 안내\n${clLine}`;
   if(extraLines.length) msg+=`\n\n■ 추가 혜택\n${extraLines.join('\n')}`;
   if(mobileLines.length) msg+=`\n\n■ 휴대폰 결합 할인\n${mobileLines.join('\n')}`;
-  msg+=`\n\n■ 약정 안내\n${clLine}`;
+  if(altelLines.length) msg+=`\n\n■ 알뜰폰결합 안내\n${altelLines.join('\n')}`;
   msg+=`\n\n궁금하신 점 언제든 문의 주세요\nSK브로드밴드\n영업부터 개통 AS까지 책임지는 지점`;
   if(rp)msg+=`\n상담전화 ${rp}`;
   $('sms-box').textContent=msg;
 }
 
+function setContractTerm(t){
+  localStorage.setItem('contract-term', t);
+  [1,2,3].forEach(n=>{
+    const btn=$('term-btn-'+n);if(!btn)return;
+    const on=n===t;
+    btn.style.background=on?'var(--p)':'#fff';
+    btn.style.color=on?'#fff':'var(--g500)';
+    btn.style.borderColor=on?'var(--p)':'var(--bd)';
+  });
+  calcAll();
+}
+function syncTermButtons(){
+  const show=S.svc==='tv_only';
+  ['term-btn-1','term-btn-2','term-btn-3','term-divider'].forEach(id=>{
+    const el=$(id);if(el)el.style.display=show?'':'none';
+  });
+  if(!show){
+    // TV만 아닐 때 3년 강제
+    setContractTerm(3);
+  }
+}
+function setRepPrefix(p){
+  localStorage.setItem('rep-prefix',p);
+  ['상담드린','방문한 서비스매니저'].forEach((v,i)=>{
+    const btn=$('prefix-btn-'+i);if(!btn)return;
+    const on=v===p;
+    btn.style.background=on?'var(--p)':'#fff';
+    btn.style.color=on?'#fff':'var(--g500)';
+    btn.style.borderColor=on?'var(--p)':'var(--bd)';
+  });
+  calcAll();
+}
 function saveRepInfo(){
   const n=$('rep-name')?.value.trim()||'';
   const p=$('rep-phone')?.value.trim()||'';
@@ -1449,9 +1520,13 @@ function saveRepInfo(){
 function loadRepInfo(){
   const n=localStorage.getItem('rep-name')||'';
   const p=localStorage.getItem('rep-phone')||'';
+  const prefix=localStorage.getItem('rep-prefix')||'상담드린';
+  const term=parseInt(localStorage.getItem('contract-term')||'3');
   const ni=$('rep-name');const pi=$('rep-phone');
   if(ni)ni.value=n;
   if(pi)pi.value=p;
+  setRepPrefix(prefix);
+  setContractTerm(term);
 }
 function formatPhone(el){let v=el.value.replace(/\D/g,'');if(v.length<=3)el.value=v;else if(v.length<=7)el.value=v.slice(0,3)+'-'+v.slice(3);else el.value=v.slice(0,3)+'-'+v.slice(3,7)+'-'+v.slice(7,11);}
 function sendSMS(){const p=($('cust-phone')?.value||'').replace(/\D/g,'');const t=$('sms-box').textContent;if(!p){alert('고객 전화번호를 먼저 입력해 주세요.');return;}window.location.href='sms:'+p+'?body='+encodeURIComponent(t);}
@@ -1467,6 +1542,7 @@ if(window.navigator.standalone)$('install-banner')&&($('install-banner').style.d
 // 초기화
 setSvc('both');
 loadRepInfo();
+syncTermButtons();
 document.addEventListener('input',e=>{if(e.target.tagName==='SELECT')calcAll();});
 </script>
 </body>

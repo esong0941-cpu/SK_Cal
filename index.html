@@ -1419,39 +1419,65 @@ function buildSMS(lines,total){
   let giftLine='';
   if(S.discount!=='baro'){const g=calcGift();if(g>0)giftLine=`  ${fmt(g)}원 상품권 제공`;}
 
-  // ■ 추가 혜택 (SM + 판매상품)
+  // ■ 추가 혜택 (출동비 + SM + 판매상품)
   let extraLines=[];
   const termYr=parseInt(localStorage.getItem('contract-term')||'3');
-  // Air 판매장비 선택 여부 확인
   const hasAirSale=S.sales.some((sl,i)=>i>0&&sl&&sl.on&&(sl.product==='air4'||sl.product==='air2'));
+
+  // 출동비 섹션 (항상 표기)
+  const tv1plan=cselVal('tvp1');
+  const isEconomy=(tv1plan==='economy');
+  // 인터넷+TV + SM + 이코노미 → TV 출동비 면제 안 함
+  const tvDispatchFree=S.sm&&!(isBoth&&isEconomy);
+
+  if(isInet){
+    // 인터넷만
+    extraLines.push(`  인터넷 출동비 36,300원 ${S.sm?'면제':'청구'}`);
+  } else if(isBoth){
+    // 인터넷+TV
+    const tvCnt=S.tvCount||1;
+    const inetFree=S.sm; // 인터넷 출동비는 SM이면 항상 면제
+    let totalDispatch=0;
+    const inetD=34100; const tv1D=22000; const tvExD=17600;
+    totalDispatch+=inetD+(tvCnt>=1?tv1D:0)+(tvCnt>1?(tvCnt-1)*tvExD:0);
+    if(S.sm){
+      const freeAmt=inetD+(tvDispatchFree?tv1D+(tvCnt>1?(tvCnt-1)*tvExD:0):0);
+      const chargeAmt=totalDispatch-freeAmt;
+      extraLines.push(`  서비스매니저 출동비 합산 ${fmt(freeAmt)}원 면제`);
+      extraLines.push(`  인터넷 출동비 34,100원 면제`);
+      if(tvDispatchFree){
+        extraLines.push(`  BTV1 출동비 22,000원 면제`);
+        for(let i=2;i<=tvCnt;i++) extraLines.push(`  BTV${i} 출동비 17,600원 면제`);
+      } else {
+        extraLines.push(`  BTV1 출동비 22,000원 (이코노미 - 면제 미적용)`);
+        for(let i=2;i<=tvCnt;i++) extraLines.push(`  BTV${i} 출동비 17,600원 (이코노미 - 면제 미적용)`);
+      }
+    } else {
+      extraLines.push(`  인터넷 출동비 34,100원`);
+      extraLines.push(`  BTV1 출동비 22,000원`);
+      for(let i=2;i<=tvCnt;i++) extraLines.push(`  BTV${i} 출동비 17,600원`);
+    }
+  } else if(isTvOnly){
+    // TV만
+    const dispatchTotal=34100+(S.tvCount-1)*17600;
+    if(S.sm){
+      extraLines.push(`  서비스매니저 출동비 합산 ${fmt(dispatchTotal)}원 면제`);
+      extraLines.push(`  BTV1 출동비 34,100원 면제`);
+      for(let i=2;i<=S.tvCount;i++) extraLines.push(`  BTV${i} 출동비 17,600원 면제`);
+    } else {
+      extraLines.push(`  BTV1 출동비 34,100원`);
+      for(let i=2;i<=S.tvCount;i++) extraLines.push(`  BTV${i} 출동비 17,600원`);
+    }
+  }
+
+  // SM 전용 추가 혜택 (셋탑임대료 등)
   if(S.sm){
     const smMonths=termYr*12;
     if(isTvOnly){
-      // TV만: TV1=34,100, TV2,3,4=17,600씩
-      const dispatchTotal=34100+(S.tvCount-1)*17600;
-      extraLines.push(`  서비스매니저 출동비 합산 ${fmt(dispatchTotal)}원 면제`);
-      extraLines.push(`  BTV1 출동비 34,100원`);
-      for(let i=2;i<=S.tvCount;i++){
-        extraLines.push(`  BTV${i} 출동비 17,600원`);
-      }
-      // TV2+ 있을 때 셋탑임대료 면제 표기 (Air 제외)
       if(S.tvCount>=2&&!hasAirSale){
         for(let i=2;i<=S.tvCount;i++){
           extraLines.push(`  BTV${i} Smart3 셋탑임대료 면제 : 4,400원 × ${smMonths}개월 = ${fmt(4400*smMonths)}원`);
         }
-      }
-    } else if(isInet){
-      // 인터넷만: 36,300원
-      extraLines.push(`  서비스매니저 출동비 36,300원 면제`);
-    } else {
-      // 인터넷+TV: 인터넷 34,100 + TV 22,000 + 추가TV 17,600씩
-      const tvCnt=S.tvCount||1;
-      const bothDispatch=34100+22000+(tvCnt-1)*17600;
-      extraLines.push(`  서비스매니저 출동비 합산 ${fmt(bothDispatch)}원 면제`);
-      extraLines.push(`  인터넷 출동비 34,100원`);
-      extraLines.push(`  BTV1 출동비 22,000원`);
-      for(let i=2;i<=tvCnt;i++){
-        extraLines.push(`  BTV${i} 출동비 17,600원`);
       }
     }
   }

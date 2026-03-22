@@ -1427,10 +1427,9 @@ function buildSMS(lines,total){
   if(S.sm){
     const smMonths=termYr*12;
     if(isTvOnly){
-      // 출동비 계산: TV1=34,100, TV2,3,4=17,600씩
+      // TV만: TV1=34,100, TV2,3,4=17,600씩
       const dispatchTotal=34100+(S.tvCount-1)*17600;
       extraLines.push(`  서비스매니저 출동비 합산 ${fmt(dispatchTotal)}원 면제`);
-      // 상세 내역
       extraLines.push(`  BTV1 출동비 34,100원`);
       for(let i=2;i<=S.tvCount;i++){
         extraLines.push(`  BTV${i} 출동비 17,600원`);
@@ -1441,11 +1440,19 @@ function buildSMS(lines,total){
           extraLines.push(`  BTV${i} Smart3 셋탑임대료 면제 : 4,400원 × ${smMonths}개월 = ${fmt(4400*smMonths)}원`);
         }
       }
+    } else if(isInet){
+      // 인터넷만: 36,300원
+      extraLines.push(`  서비스매니저 출동비 36,300원 면제`);
     } else {
-      // 인터넷+TV 출동비: 인터넷+TV기본 34,100 + 22,000 + TV추가 17,600씩
-      const tvCnt = S.tvCount||1;
-      const bothDispatch = tvCnt===0 ? 36300 : 34100+22000+(tvCnt-1)*17600;
-      extraLines.push(`  서비스매니저 출동비 ${fmt(bothDispatch)}원 면제`);
+      // 인터넷+TV: 인터넷 34,100 + TV 22,000 + 추가TV 17,600씩
+      const tvCnt=S.tvCount||1;
+      const bothDispatch=34100+22000+(tvCnt-1)*17600;
+      extraLines.push(`  서비스매니저 출동비 합산 ${fmt(bothDispatch)}원 면제`);
+      extraLines.push(`  인터넷 출동비 34,100원`);
+      extraLines.push(`  BTV1 출동비 22,000원`);
+      for(let i=2;i<=tvCnt;i++){
+        extraLines.push(`  BTV${i} 출동비 17,600원`);
+      }
     }
   }
   const soAvail=!(S.svc==='both'&&ip==='lan');

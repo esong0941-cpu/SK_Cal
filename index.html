@@ -1444,7 +1444,10 @@ function buildSMS(lines,total){
         }
       }
     } else {
-      extraLines.push(`  서비스매니저 출동비 면제`);
+      // 인터넷+TV 출동비: 인터넷+TV기본 34,100 + 22,000 + TV추가 17,600씩
+      const tvCnt = S.tvCount||1;
+      const bothDispatch = tvCnt===0 ? 36300 : 34100+22000+(tvCnt-1)*17600;
+      extraLines.push(`  서비스매니저 출동비 ${fmt(bothDispatch)}원 면제`);
     }
   }
   const soAvail=!(S.svc==='both'&&ip==='lan');

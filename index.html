@@ -781,8 +781,8 @@ function registerTVCsel(i){
   // within2y: TV1은 일반요금(4,400원), TV2+는 SM요금(0원)
   const isWithin2y = S.sm && S.svc==='tv_only' && S.gigaMode==='within2y';
   const smStb = S.sm && (S.svc==='tv_only' || i>=2) && !isWithin2y;
-  const smStbTV1within2y = isWithin2y && i===1; // TV1: 일반요금 표시
-  const smStbTV2within2y = isWithin2y && i>=2;  // TV2+: SM요금 표시
+  const smStbTV2within2y = isWithin2y && i>=2;  // TV2+: SM요금(0원)
+  // TV1 within2y: Smart3=4,400원 (일반요금), TV2+: Smart3=0원 (SM요금)
   CSEL_DEFS[si]={title:'TV'+i+' 셋탑박스',options:
     (smStb||smStbTV2within2y)
       ?[{value:'',label:'선택하세요'},{value:'smart3',label:'Smart3 (0원)'},{value:'smart3mini',label:'Smart3미니 (4,400원)'},{value:'ai5',label:'AI5 (7,700원)'},{value:'air4',label:'Air4 (8,800원)'}]
@@ -976,7 +976,7 @@ function setGigaMode(mode){
   if(S.svc!=='tv_only')return;
   S.gigaMode=(S.gigaMode===mode)?'none':mode;
   S.giga2y=(S.gigaMode==='2y');
-  syncGiga();calcAll();
+  syncGiga();renderTV();calcAll();
 }
 function syncGiga(){
   const locked=S.svc!=='tv_only';
@@ -1428,14 +1428,20 @@ function buildSMS(lines,total){
   const hasAirSale=S.sales.some((sl,i)=>i>0&&sl&&sl.on&&(sl.product==='air4'||sl.product==='air2'));
   if(S.sm){
     const smMonths=termYr*12;
-    if(isTvOnly&&S.gigaMode==='within2y'){
-      extraLines.push(`  서비스매니저 출동비 34,100원 면제`);
-      extraLines.push(`  초고속1년이내 TV1요금 적용`);
-    } else if(isTvOnly){
-      extraLines.push(`  서비스매니저 출동비 34,100원 면제`);
-      // Air 판매장비 선택 시 셋탑임대료 면제 표기 안 함
-      if(!hasAirSale){
-        extraLines.push(`  Smart3 셋탑임대료 면제 : 4,400원 × ${smMonths}개월 = ${fmt(4400*smMonths)}원`);
+    if(isTvOnly){
+      // 출동비 계산: TV1=34,100, TV2,3,4=17,600씩
+      const dispatchTotal=34100+(S.tvCount-1)*17600;
+      extraLines.push(`  서비스매니저 출동비 합산 ${fmt(dispatchTotal)}원 면제`);
+      // 상세 내역
+      extraLines.push(`  BTV1 출동비 34,100원`);
+      for(let i=2;i<=S.tvCount;i++){
+        extraLines.push(`  BTV${i} 출동비 17,600원`);
+      }
+      // TV2+ 있을 때 셋탑임대료 면제 표기 (Air 제외)
+      if(S.tvCount>=2&&!hasAirSale){
+        for(let i=2;i<=S.tvCount;i++){
+          extraLines.push(`  BTV${i} Smart3 셋탑임대료 면제 : 4,400원 × ${smMonths}개월 = ${fmt(4400*smMonths)}원`);
+        }
       }
     } else {
       extraLines.push(`  서비스매니저 출동비 면제`);

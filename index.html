@@ -927,12 +927,10 @@ function setType(t){
 // ── 할인구분
 function setDiscount(d){
   S.discount=d;
-  ['disc-none','disc-baro','disc-fam'].forEach(id=>$(id).classList.remove('on'));
-  $('disc-'+d==='none'?'disc-none':d==='baro'?'disc-baro':'disc-fam').classList.add('on');
-  // 정확한 선택
-  if(d==='none') $('disc-none').classList.add('on');
-  else if(d==='baro') $('disc-baro').classList.add('on');
-  else $('disc-fam').classList.add('on');
+  ['disc-none','disc-baro','disc-fam'].forEach(id=>$(id)?.classList.remove('on'));
+  if(d==='none') $('disc-none')?.classList.add('on');
+  else if(d==='baro') $('disc-baro')?.classList.add('on');
+  else $('disc-fam')?.classList.add('on');
 
   const hintEl=$('disc-info');
   const hints={none:'',baro:'바로할인 : 인터넷 기본료에서 할인 반영',fam:'패밀리 : 고정 요금 적용 (바로할인·핸드폰결합 적용 불가)'};

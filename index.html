@@ -734,7 +734,80 @@ svg{display:inline-block;vertical-align:middle;flex-shrink:0}
     <div class="toast" id="toast">클립보드에 복사되었습니다</div>
   </div>
 
+  <!-- 비교견적 카드 -->
+  <div class="res-card">
+    <div class="res-hd">
+      <svg class="i14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      <span class="res-title">비교견적</span>
+      <button id="compare-toggle-btn" onclick="toggleCompareMode()" style="margin-left:auto;padding:5px 12px;border:1.5px solid var(--bd);border-radius:8px;background:#fff;color:var(--g500);font-family:inherit;font-size:11px;font-weight:700;cursor:pointer">모드 켜기</button>
+    </div>
+
+    <div id="compare-panel" style="display:none;padding:12px 16px 14px">
+      <p style="font-size:12px;color:var(--g400);margin-bottom:12px">요금 계산 탭에서 설정 후 각 안에 저장하세요</p>
+
+      <!-- A안 -->
+      <div style="border:2px solid var(--p);border-radius:12px;padding:12px 14px;margin-bottom:10px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <span id="plan-a-label" style="font-size:13px;font-weight:800;color:var(--p)">A안</span>
+          <div style="display:flex;gap:6px">
+            <button onclick="savePlan('A')" style="padding:5px 12px;border:1.5px solid var(--p);border-radius:8px;background:var(--p);color:#fff;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer">현재 저장</button>
+            <button onclick="clearPlan('A')" style="padding:5px 10px;border:1.5px solid var(--bd);border-radius:8px;background:#fff;color:var(--g500);font-family:inherit;font-size:11px;font-weight:700;cursor:pointer">초기화</button>
+          </div>
+        </div>
+        <div id="plan-a-summary" style="font-size:12px;color:var(--g500);line-height:1.7">저장된 내용 없음</div>
+      </div>
+
+      <!-- B안 -->
+      <div style="border:2px solid #10b981;border-radius:12px;padding:12px 14px;margin-bottom:10px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <span id="plan-b-label" style="font-size:13px;font-weight:800;color:#10b981">B안</span>
+          <div style="display:flex;gap:6px">
+            <button onclick="savePlan('B')" style="padding:5px 12px;border:1.5px solid #10b981;border-radius:8px;background:#10b981;color:#fff;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer">현재 저장</button>
+            <button onclick="clearPlan('B')" style="padding:5px 10px;border:1.5px solid var(--bd);border-radius:8px;background:#fff;color:var(--g500);font-family:inherit;font-size:11px;font-weight:700;cursor:pointer">초기화</button>
+          </div>
+        </div>
+        <div id="plan-b-summary" style="font-size:12px;color:var(--g500);line-height:1.7">저장된 내용 없음</div>
+      </div>
+
+      <!-- 차액 + 추천 -->
+      <div id="compare-diff" style="display:none;border-radius:12px;overflow:hidden;margin-bottom:12px">
+        <div style="background:var(--g100);padding:10px 14px">
+          <div id="compare-diff-amt" style="font-size:14px;font-weight:800;color:var(--g900);text-align:center"></div>
+        </div>
+        <div id="compare-recommend" style="background:#fefce8;border-top:1px solid #fde047;padding:10px 14px;font-size:12px;font-weight:700;color:#854d0e;line-height:1.6"></div>
+      </div>
+
+      <!-- 비교 문자 생성 -->
+      <button onclick="buildCompareSMS()" style="width:100%;padding:13px;border:none;border-radius:12px;background:var(--red);color:#fff;font-family:inherit;font-size:13px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">
+        <svg style="width:15px;height:15px;stroke-width:2" viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        비교 문자 만들기
+      </button>
+
+      <!-- 비교 문자 미리보기 -->
+      <div id="compare-sms-card" style="display:none;margin-top:12px">
+        <div class="sms-box" id="compare-sms-box" style="max-height:360px;margin:0 0 10px"></div>
+        <div style="margin-bottom:8px">
+          <input type="tel" id="cust-phone-compare" placeholder="고객 전화번호"
+            style="width:100%;padding:11px 14px;border:1.5px solid var(--bd);border-radius:10px;font-family:inherit;font-size:13px;font-weight:600;color:var(--g900);background:#fff;outline:none;"
+            oninput="formatPhone(this)"
+            onfocus="this.style.borderColor='var(--p)'" onblur="this.style.borderColor='var(--bd)'">
+        </div>
+        <div class="sms-btns" style="padding:0">
+          <button class="sms-btn sms-btn-copy" onclick="copySMS('compare-sms-box')">
+            <svg style="width:15px;height:15px;stroke-width:2" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            복사
+          </button>
+          <button class="sms-btn sms-btn-send" onclick="sendCompareSMS()">
+            <svg style="width:15px;height:15px;stroke-width:2" viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            문자보내기
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
 </div><!-- /pane-result -->
+
 </div><!-- /tab-content -->
 
 <!-- STICKY -->
@@ -839,6 +912,239 @@ function toggleAccordion(){accOpen=!accOpen;$('acc-body').classList.toggle('open
 function switchTab(t){
   ['calc','result'].forEach(k=>{$('tab-'+k).classList.toggle('on',k===t);$('pane-'+k).classList.toggle('on',k===t);});
   $('sticky-bar').classList.toggle('hidden',t==='result');
+}
+
+// ── 비교견적 모드
+let compareMode=false;
+let planA=null, planB=null;
+function toggleCompareMode(){
+  compareMode=!compareMode;
+  $('compare-panel').style.display=compareMode?'block':'none';
+  const btn=$('compare-toggle-btn');
+  if(compareMode){btn.textContent='모드 끄기';btn.style.background='var(--p)';btn.style.color='#fff';btn.style.borderColor='var(--p)';}
+  else{btn.textContent='모드 켜기';btn.style.background='#fff';btn.style.color='var(--g500)';btn.style.borderColor='var(--bd)';}
+}
+
+function makeAutoLabel(){
+  if(S.discount==='baro') return '요금할인형';
+  if(S.discount==='fam') return '패밀리 요금형';
+  if(S.sm) return '서비스매니저형';
+  // 기본요금 - 사은품 여부
+  const g=calcGift();
+  if(g>0) return '사은품 제공형';
+  return '기본요금형';
+}
+
+function getPlanSnapshot(){
+  const smsEl=$('sms-box');
+  const smsText=smsEl?smsEl.textContent:'';
+  const totalEl=$('total-badge');
+  const totalText=totalEl?totalEl.textContent:'';
+  const getAmt=t=>{const m=t.match(/[\d,]+/);return m?parseInt(m[0].replace(/,/g,'')):0;};
+  const totalAmt=getAmt(totalText);
+  const gift=calcGift();
+  const baroDC=S.discount==='baro'?getBaroDC(cselVal('inet-plan')):0;
+  const baro36=baroDC*36;
+  const lines=smsText.split('\n').filter(l=>l.trim());
+  const prodLines=[],feeLines=[];
+  let inProd=false,inFee=false;
+  for(const l of lines){
+    if(l.includes('■ 상담상품')){inProd=true;inFee=false;}
+    else if(l.includes('■ 월요금')){inFee=true;inProd=false;}
+    else if(l.startsWith('■')){inProd=false;inFee=false;}
+    else if(inProd&&l.trim())prodLines.push(l.trim());
+    else if(inFee&&l.trim())feeLines.push(l.trim());
+  }
+  const label=makeAutoLabel();
+  return {smsText,totalText,totalAmt,prodLines,feeLines,discount:S.discount,gift,baro36,svc:S.svc,label};
+}
+
+function savePlan(ab){
+  const snap=getPlanSnapshot();
+  if(ab==='A'){
+    planA=snap;
+    const el=$('plan-a-label');
+    if(el){el.textContent=snap.label;}
+  } else {
+    planB=snap;
+    const el=$('plan-b-label');
+    if(el){el.textContent=snap.label;}
+  }
+  renderPlanSummary();
+}
+
+function clearPlan(ab){
+  if(ab==='A') planA=null; else planB=null;
+  renderPlanSummary();
+}
+
+function renderPlanSummary(){
+  const render=(snap,id)=>{
+    const el=$(id);if(!el)return;
+    if(!snap){el.innerHTML='<span style="color:var(--g400)">저장된 내용 없음</span>';return;}
+    let html='';
+    snap.prodLines.forEach(l=>html+=`<div>${l}</div>`);
+    const fee=snap.feeLines.find(l=>l.includes('납부액'));
+    if(fee)html+=`<div style="margin-top:4px;font-weight:800;color:var(--g900)">${fee}</div>`;
+    const dcLabel={none:'기본요금',baro:'바로할인',fam:'패밀리'};
+    html+=`<div style="color:var(--g400);font-size:11px;margin-top:2px">할인: ${dcLabel[snap.discount]||snap.discount}${snap.gift>0?' · 사은품 '+snap.gift.toLocaleString()+'원':''}${snap.baro36>0?' · 바로할인 총 '+snap.baro36.toLocaleString()+'원':''}</div>`;
+    el.innerHTML=html;
+  };
+  render(planA,'plan-a-summary');
+  render(planB,'plan-b-summary');
+
+  const diffEl=$('compare-diff');
+  const diffAmt=$('compare-diff-amt');
+  const recEl=$('compare-recommend');
+  if(planA&&planB){
+    diffEl.style.display='block';
+    const a=planA.totalAmt, b=planB.totalAmt;
+    const diff=b-a;
+    const nameA=planA.label, nameB=planB.label;
+    diffAmt.innerHTML=`${nameA} <b>${planA.totalText}</b> &nbsp;vs&nbsp; ${nameB} <b>${planB.totalText}</b><br><span style="font-size:12px;color:var(--g500)">월 차액 ${Math.abs(diff).toLocaleString()}원 (${diff>0?nameA+'이':nameB+'이'} 저렴)</span>`;
+
+    // 추천 로직
+    let recs=[];
+    const cheaper=diff<=0?planA:planB;
+    const pricier=diff<=0?planB:planA;
+    const absDiff=Math.abs(diff);
+
+    // 월 납부액 기준
+    if(absDiff>0) recs.push(`💰 월 납부액: ${cheaper.label}이 ${absDiff.toLocaleString()}원 저렴 (3년 기준 ${(absDiff*36).toLocaleString()}원 절약)`);
+
+    // 바로할인 vs 사은품 비교
+    if(planA.baro36>0||planB.baro36>0){
+      const aTotal=planA.baro36+planA.gift;
+      const bTotal=planB.baro36+planB.gift;
+      const betterBenefit=aTotal>=bTotal?planA:planB;
+      recs.push(`🎁 총 혜택: ${betterBenefit.label}이 유리 (바로할인+사은품 합산 ${Math.max(aTotal,bTotal).toLocaleString()}원)`);
+    } else if(planA.gift>0||planB.gift>0){
+      const betterGift=planA.gift>=planB.gift?planA:planB;
+      recs.push(`🎁 사은품: ${betterGift.label}이 유리 (${betterGift.gift.toLocaleString()}원 상품권)`);
+    }
+
+    // 최종 추천
+    // 장기 실익 = 3년 납부총액 - 바로할인혜택 - 사은품
+    const netA=planA.totalAmt*36-planA.baro36-planA.gift;
+    const netB=planB.totalAmt*36-planB.baro36-planB.gift;
+    const bestNet=netA<=netB?planA:planB;
+    recs.push(`⭐ 3년 실납부 기준 추천: ${bestNet.label} (실납부 ${Math.min(netA,netB).toLocaleString()}원)`);
+
+    recEl.innerHTML=recs.join('<br>');
+  } else {
+    diffEl.style.display='none';
+  }
+}
+
+function buildCompareSMS(){
+  if(!planA&&!planB){alert('먼저 저장해주세요.');return;}
+  const rn=localStorage.getItem('rep-name')||'';
+  const rpx=localStorage.getItem('rep-prefix')||'상담드린';
+  const rp=localStorage.getItem('rep-phone')||'';
+  const termYr=parseInt(localStorage.getItem('contract-term')||'3');
+
+  let msg=`[SK브로드밴드 비교견적 안내]\n\n안녕하세요, 고객님 😊 ${rpx} ${rn}입니다.\n인터넷 상품 비교 안내드립니다.\n`;
+
+  const extractCore=(snap)=>{
+    const lines=snap.smsText.split('\n');
+    const start=lines.findIndex(l=>l.includes('■ 상담상품'));
+    const end=lines.findIndex(l=>l.includes('궁금하신'));
+    return lines.slice(start>=0?start:0,end>=0?end:lines.length).join('\n');
+  };
+
+  // 각 안 표기
+  const renderPlan=(snap,badge='')=>{
+    if(!snap)return'';
+    let s=`◆ ${snap.label}${badge?` ${badge}`:''}\n`;
+    // 상품
+    if(snap.prodLines.length) s+=`■ 상품\n${snap.prodLines.map(l=>`  ${l}`).join('\n')}\n`;
+    // 월요금
+    const feeLine=snap.feeLines.find(l=>l.includes('납부액'))||'';
+    if(feeLine) s+=`■ 월요금  ${feeLine.replace('월 납부액 :','').trim()}\n`;
+    if(snap.discount==='baro'){
+      const dc=snap.baro36/36;
+      s+=`  ※ 바로할인 ${dc.toLocaleString()}원 적용\n`;
+      s+=`■ 할인혜택  총 ${snap.baro36.toLocaleString()}원 절감 (36개월 기준)\n`;
+      s+=`  출동비 면제\n`;
+    } else if(snap.gift>0){
+      s+=`■ 사은품  ${snap.gift.toLocaleString()}원 상품권 제공\n`;
+    }
+    return s;
+  };
+
+  // 추천 판단
+  let recLabel='';
+  if(planA&&planB){
+    const netA=planA.totalAmt*36-planA.baro36;
+    const netB=planB.totalAmt*36-planB.baro36;
+    recLabel=netA<=netB?'⭐추천':'';
+    const recBadgeA=netA<=netB?'⭐추천':'';
+    const recBadgeB=netB<netA?'⭐추천':'';
+    if(planA) msg+=`\n${renderPlan(planA,recBadgeA)}`;
+    if(planB) msg+=`\n${renderPlan(planB,recBadgeB)}`;
+  } else {
+    if(planA) msg+=`\n${renderPlan(planA)}`;
+    if(planB) msg+=`\n${renderPlan(planB)}`;
+  }
+
+  // 요금 비교
+  if(planA&&planB){
+    const diff=planB.totalAmt-planA.totalAmt;
+    const cheaper=diff<=0?planA:planB;
+    const absDiff=Math.abs(diff);
+    msg+=`◆ 요금 비교\n`;
+    msg+=`  ${planA.label} : ${planA.totalText}\n`;
+    msg+=`  ${planB.label} : ${planB.totalText}\n`;
+    if(absDiff>0) msg+=`  👉 월 ${absDiff.toLocaleString()}원 절약 (${cheaper.label}이 저렴)\n`;
+
+    // 추천 안내
+    const netA=planA.totalAmt*36-planA.baro36;
+    const netB=planB.totalAmt*36-planB.baro36;
+    const best=netA<=netB?planA:planB;
+    const worst=netA<=netB?planB:planA;
+    const saving=Math.abs(netA-netB);
+    msg+=`\n💡 추천 안내\n`;
+    msg+=`  ${best.label} 기준 3년 총 ${saving.toLocaleString()}원 절약\n`;
+    if(best.discount==='baro'&&worst.gift>0){
+      msg+=`  → 바로할인 혜택이 사은품보다 유리\n`;
+    }
+
+    // 공통 안내
+    msg+=`\n◆ 공통 안내\n`;
+    msg+=`■ 약정  ${termYr}년 약정 (기간 내 해지 시 할인반환금 발생)\n`;
+    // 사은품 있는 안 해지 시 추가 안내
+    const giftPlan=[planA,planB].find(p=>p&&p.gift>0);
+    if(giftPlan) msg+=`  ※ ${giftPlan.label}은 1년 이내 해지 시 사은품 반환 추가 발생\n`;
+    // 바로할인 - 사은품 없음 안내
+    const baroPlan=[planA,planB].find(p=>p&&p.discount==='baro');
+    if(baroPlan) msg+=`  ※ ${baroPlan.label}(바로할인)은 사은품 미제공\n`;
+    // 출동비
+    msg+=`■ 출동비  기본 청구`;
+    const freePlan=[planA,planB].find(p=>p&&p.discount==='baro');
+    if(freePlan) msg+=` ※ ${freePlan.label}은 면제 적용`;
+    msg+='\n';
+  }
+
+  msg+=`\n궁금하신 점 언제든 문의 주세요 😊\nSK브로드밴드\n영업부터 개통·AS까지 책임지는 지점`;
+  if(rp) msg+=`\n상담전화 ${rp}`;
+
+  $('compare-sms-box').textContent=msg;
+  $('compare-sms-card').style.display='block';
+  $('compare-sms-card').scrollIntoView({behavior:'smooth'});
+}
+
+function sendCompareSMS(){
+  const p=($('cust-phone-compare')?.value||'').replace(/\D/g,'');
+  const t=$('compare-sms-box').textContent;
+  if(!p){alert('고객 전화번호를 먼저 입력해 주세요.');return;}
+  window.location.href='sms:'+p+'?body='+encodeURIComponent(t);
+}
+
+function copySMS(id){
+  const t=$(id)?.textContent||'';
+  navigator.clipboard.writeText(t).then(()=>{
+    const toast=$('toast');if(toast){toast.classList.add('show');setTimeout(()=>toast.classList.remove('show'),2000);}
+  });
 }
 
 // ── 서비스 구성 (3종)

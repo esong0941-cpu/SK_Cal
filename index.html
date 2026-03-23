@@ -771,12 +771,6 @@ svg{display:inline-block;vertical-align:middle;flex-shrink:0}
       <!-- 비교 문자 미리보기 -->
       <div id="compare-sms-card" style="display:none;margin-top:12px">
         <div class="sms-box" id="compare-sms-box" style="max-height:360px;margin:0 0 10px"></div>
-        <div style="margin-bottom:8px">
-          <input type="tel" id="cust-phone-compare" placeholder="고객 전화번호"
-            style="width:100%;padding:11px 14px;border:1.5px solid var(--bd);border-radius:10px;font-family:inherit;font-size:13px;font-weight:600;color:var(--g900);background:#fff;outline:none;"
-            oninput="formatPhone(this)"
-            onfocus="this.style.borderColor='var(--p)'" onblur="this.style.borderColor='var(--bd)'">
-        </div>
         <div class="sms-btns" style="padding:0">
           <button class="sms-btn sms-btn-copy" onclick="copySMS('compare-sms-box')">
             <svg style="width:15px;height:15px;stroke-width:2" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
@@ -1122,7 +1116,7 @@ function buildCompareSMS(){
 }
 
 function sendCompareSMS(){
-  const p=($('cust-phone-compare')?.value||'').replace(/\D/g,'');
+  const p=($('cust-phone')?.value||'').replace(/\D/g,'');
   const t=$('compare-sms-box').textContent;
   if(!p){alert('고객 전화번호를 먼저 입력해 주세요.');return;}
   window.location.href='sms:'+p+'?body='+encodeURIComponent(t);

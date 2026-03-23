@@ -912,11 +912,10 @@ function toggleCompareMode(){
 
 function makeAutoLabel(){
   if(S.discount==='baro') return '요금할인형';
-  if(S.discount==='fam') return '패밀리 요금형';
-  if(S.sm) return '서비스매니저형';
-  // 기본요금 - 사은품 여부
+  if(S.discount==='fam') return '패밀리요금형';
   const g=calcGift();
-  if(g>0) return '사은품 제공형';
+  if(g>0) return '사은품제공형';
+  if(S.sm) return '서비스매니저형';
   return '기본요금형';
 }
 
@@ -941,7 +940,7 @@ function getPlanSnapshot(){
     else if(inFee&&l.trim())feeLines.push(l.trim());
   }
   const label=makeAutoLabel();
-  return {smsText,totalText,totalAmt,prodLines,feeLines,discount:S.discount,gift,baro36,svc:S.svc,label};
+  return {smsText,totalText,totalAmt,prodLines,feeLines,discount:S.discount,gift,baro36,svc:S.svc,sm:S.sm,label};
 }
 
 function savePlan(ab){
@@ -1010,8 +1009,9 @@ function renderPlanSummary(){
 
     // 최종 추천
     // 장기 실익 = 3년 납부총액 - 바로할인혜택 - 사은품
-    const netA=planA.totalAmt*36-planA.baro36-planA.gift;
-    const netB=planB.totalAmt*36-planB.baro36-planB.gift;
+    // 3년 실납부 = 월납부액*36 - 사은품 (바로할인은 이미 월요금에 반영됨)
+    const netA=planA.totalAmt*36-planA.gift;
+    const netB=planB.totalAmt*36-planB.gift;
     const bestNet=netA<=netB?planA:planB;
     recs.push(`⭐ 3년 실납부 기준 추천: ${bestNet.label} (실납부 ${Math.min(netA,netB).toLocaleString()}원)`);
 
@@ -1051,6 +1051,9 @@ function buildCompareSMS(){
       s+=`  ※ 바로할인 ${dc.toLocaleString()}원 적용\n`;
       s+=`■ 할인혜택  총 ${snap.baro36.toLocaleString()}원 절감 (36개월 기준)\n`;
       s+=`  출동비 면제\n`;
+    } else if(snap.sm){
+      s+=`■ 추가혜택  서비스매니저 출동비 면제\n`;
+      if(snap.gift>0) s+=`■ 사은품  ${snap.gift.toLocaleString()}원 상품권 제공\n`;
     } else if(snap.gift>0){
       s+=`■ 사은품  ${snap.gift.toLocaleString()}원 상품권 제공\n`;
     }
@@ -1060,8 +1063,8 @@ function buildCompareSMS(){
   // 추천 판단
   let recLabel='';
   if(planA&&planB){
-    const netA=planA.totalAmt*36-planA.baro36;
-    const netB=planB.totalAmt*36-planB.baro36;
+    const netA=planA.totalAmt*36-planA.gift;
+    const netB=planB.totalAmt*36-planB.gift;
     recLabel=netA<=netB?'⭐추천':'';
     const recBadgeA=netA<=netB?'⭐추천':'';
     const recBadgeB=netB<netA?'⭐추천':'';
@@ -1083,8 +1086,8 @@ function buildCompareSMS(){
     if(absDiff>0) msg+=`  👉 월 ${absDiff.toLocaleString()}원 절약 (${cheaper.label}이 저렴)\n`;
 
     // 추천 안내
-    const netA=planA.totalAmt*36-planA.baro36;
-    const netB=planB.totalAmt*36-planB.baro36;
+    const netA=planA.totalAmt*36-planA.gift;
+    const netB=planB.totalAmt*36-planB.gift;
     const best=netA<=netB?planA:planB;
     const worst=netA<=netB?planB:planA;
     const saving=Math.abs(netA-netB);
@@ -1103,10 +1106,10 @@ function buildCompareSMS(){
     // 바로할인 - 사은품 없음 안내
     const baroPlan=[planA,planB].find(p=>p&&p.discount==='baro');
     if(baroPlan) msg+=`  ※ ${baroPlan.label}(바로할인)은 사은품 미제공\n`;
-    // 출동비
+    // 출동비 면제: 바로할인 또는 서비스매니저
+    const freePlans=[planA,planB].filter(p=>p&&(p.discount==='baro'||p.sm));
     msg+=`■ 출동비  기본 청구`;
-    const freePlan=[planA,planB].find(p=>p&&p.discount==='baro');
-    if(freePlan) msg+=` ※ ${freePlan.label}은 면제 적용`;
+    if(freePlans.length>0) msg+=` ※ ${freePlans.map(p=>p.label).join(', ')}은 면제 적용`;
     msg+='\n';
   }
 

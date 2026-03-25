@@ -445,10 +445,10 @@ svg{display:inline-block;vertical-align:middle;flex-shrink:0}
     </div>
     <div class="opt-acc-body open" id="acc-body">
       <div class="g3" style="gap:8px">
-        <div class="opt-item" id="sm-toggle" onclick="toggleSM()">
+        <div class="opt-item" id="multiset-wrap" onclick="toggleMultiset()">
           <div class="opt-info">
-            <span class="opt-name" id="sm-txt">서비스매니저</span>
-            <span class="opt-desc" id="sm-sub">셋탑·출동비</span>
+            <span class="opt-name">다셋탑</span>
+            <span class="opt-desc" id="multiset-sub">해당 시 선택</span>
           </div>
         </div>
         <div class="opt-item" id="giga2y-wrap" onclick="setGigaMode('2y')">
@@ -461,12 +461,6 @@ svg{display:inline-block;vertical-align:middle;flex-shrink:0}
           <div class="opt-info">
             <span class="opt-name">초고속1년이내</span>
             <span class="opt-desc" id="gigaW2y-sub">해당 시 선택</span>
-          </div>
-        </div>
-        <div class="opt-item" id="phone-toggle" onclick="togglePhone()" style="grid-column:1/-1">
-          <div class="opt-info">
-            <span class="opt-name" id="phone-name">전화 추가</span>
-            <span class="opt-desc" id="phone-sub-lbl">SKB 인터넷전화</span>
           </div>
         </div>
       </div>
@@ -877,7 +871,7 @@ const TV_DOTC=['','#2563EB','#6B7280','#374151','#111827'];
 //   2년이상/이내만    → 기본 solo 요금, 일반셋탑, 출동비 청구
 // S.sales[i]: { on, product, payType } — TV 대수별 판매상품 (1~4)
 function mkSale(){return {on:false,product:'none',payType:'split'};}
-let S={type:'u',discount:'none',svc:'both',sm:false,giga2y:false,gigaMode:'none',tvCount:1,phone:false,
+let S={type:'u',discount:'none',svc:'both',sm:false,giga2y:false,gigaMode:'none',multiset:false,tvCount:1,phone:false,
        sale:{on:false,product:'none',payType:'split'},
        sales:[null,mkSale(),mkSale(),mkSale(),mkSale()],
        smTerm:3}; // TV만+SM 약정기간 (년)
@@ -1162,7 +1156,7 @@ function setSvc(v){
 
   if(isInet){
     S.tvCount=0;
-    S.giga2y=false;S.gigaMode='none';syncGiga();
+    S.giga2y=false;S.gigaMode='none';S.multiset=false;syncGiga();
     $('disc-info').style.display='none';
     // 인터넷 단독: 단독 버튼 기본 선택
     S.type='basic';
@@ -1174,7 +1168,7 @@ function setSvc(v){
     S.tvCount=1;
     for(let i=0;i<=4;i++)$('tc'+i).classList.toggle('on',i===1);
     setEl('tc0',el=>el.style.display='none');
-    S.gigaMode='none';S.giga2y=false;
+    S.gigaMode='none';S.giga2y=false;S.multiset=false;
     // 할인구분 숨김 + none으로 리셋
     setEl('discount-section',el=>el.style.display='none');
     if(S.discount!=='none'){S.discount='none';['disc-none','disc-baro','disc-fam'].forEach(id=>$(id)?.classList.remove('on'));$('disc-none')?.classList.add('on');$('disc-info').style.display='none';}
@@ -1182,7 +1176,7 @@ function setSvc(v){
     $('seonap-area').style.display=S.sm?'block':'none';
   } else {
     // both
-    S.giga2y=false;S.gigaMode='none';syncGiga();
+    S.giga2y=false;S.gigaMode='none';S.multiset=false;syncGiga();
     setEl('opt-note',el=>el.style.display='none');
     if(S.tvCount===0){S.tvCount=1;for(let i=0;i<=4;i++)$('tc'+i).classList.toggle('on',i===1);}
     // 인터넷+TV: basic 없음, u가 기본
@@ -1246,27 +1240,42 @@ function setSmTerm(t){
 }
 
 // ── SM
-function toggleSM(){S.sm=!S.sm;syncSM();syncGiga();renderTV();calcAll();}
+function toggleSM(){S.sm=true;syncSM();syncGiga();renderTV();calcAll();}
 function syncSM(){
   const isTv=S.svc==='tv_only';
-  $('sm-toggle').className=S.sm?'opt-item on-sm':'opt-item';
-  setEl('sm-sub',el=>el.textContent=S.sm&&isTv?'TV2요금·Smart3 0원·출동비면제':'셋탑·출동비');
-  $('seonap-area').style.display=(S.sm&&isTv)?'block':'none';
-  if(!S.sm){if(CSEL_DEFS['seonap-sel'])CSEL_DEFS['seonap-sel'].value='0';setEl('seonap-sel-label',el=>el.textContent='프로모션 없음');setEl('seonap-tbl-wrap',el=>el.style.display='none');['sum-seonap-row','sum-seonap-row2'].forEach(id=>setEl(id,el=>el.style.display='none'));}
+  S.sm=true;
+  $('seonap-area').style.display=isTv?'block':'none';
+  if(!isTv){if(CSEL_DEFS['seonap-sel'])CSEL_DEFS['seonap-sel'].value='0';setEl('seonap-sel-label',el=>el.textContent='프로모션 없음');setEl('seonap-tbl-wrap',el=>el.style.display='none');['sum-seonap-row','sum-seonap-row2'].forEach(id=>setEl(id,el=>el.style.display='none'));}
   ['bdg-sm2'].forEach(id=>setEl(id,el=>el.style.display=S.sm?'':'none'));
   updateOptNote();
 }
 
-// ── 초고속 (1년이상/1년이내 — 상호 배타, 같은 버튼 누르면 해제)
+// ── 추가옵션 버튼 (다셋탑/초고속1년이상/이내 — 상호 배타)
+function toggleMultiset(){
+  if(S.svc!=='tv_only')return;
+  const wasOn=S.multiset;
+  S.multiset=false;S.gigaMode='none';S.giga2y=false;
+  if(!wasOn) S.multiset=true;
+  syncGiga();renderTV();calcAll();
+}
 function setGigaMode(mode){
   if(S.svc!=='tv_only')return;
+  S.multiset=false;
   S.gigaMode=(S.gigaMode===mode)?'none':mode;
   S.giga2y=(S.gigaMode==='2y');
   syncGiga();renderTV();calcAll();
 }
 function syncGiga(){
   const locked=S.svc!=='tv_only';
-  // 2년이상 버튼
+  // 다셋탑 (독립 버튼)
+  const ms=$('multiset-wrap');
+  if(ms){
+    ms.style.opacity=locked?'.4':'1';
+    ms.style.pointerEvents=locked?'none':'auto';
+    ms.className=S.multiset?'opt-item on-teal':'opt-item';
+    setEl('multiset-sub',el=>el.textContent=locked?'TV만 모드에서':'해당 시 선택');
+  }
+  // 초고속1년이상 (독립 버튼)
   const w2=$('giga2y-wrap');
   if(w2){
     w2.style.opacity=locked?'.4':'1';
@@ -1274,7 +1283,7 @@ function syncGiga(){
     w2.className=(S.gigaMode==='2y')?'opt-item on-teal':'opt-item';
     setEl('giga2y-sub',el=>el.textContent=locked?'TV만 모드에서':'해당 시 선택');
   }
-  // 2년이내 버튼
+  // 초고속1년이내
   const ww=$('gigaW2y-wrap');
   if(ww){
     ww.style.opacity=locked?'.4':'1';
@@ -1330,8 +1339,8 @@ function getSaleExtraForIdx(idx){
   const sl=S.sales[idx];
   if(!sl||!sl.on||sl.product==='none')return 0;
   if(sl.product==='moving') return sl.payType==='split'?11000:0;
-  if(sl.product==='air4')   return 3300;
-  if(sl.product==='air2')   return 0;
+  if(sl.product==='air4')   return S.svc==='both'?8800:3300;
+  if(sl.product==='air2')   return S.svc==='both'?8800:0;
   return 0;
 }
 function getSaleExtra(){return getSaleExtraForIdx(1);}
@@ -1377,8 +1386,8 @@ function renderTV(){
         </label>
         ${sc?`<div style="margin-top:10px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px">
           <button class="btn${pd==='moving'?' on':''}" onclick="setSaleProduct('moving',${idx})" style="font-size:11px;padding:8px 4px">무빙<span class="btn-sub">Smart3미니</span></button>
-          <button class="btn${pd==='air4'?' on':''}" onclick="setSaleProduct('air4',${idx})" style="font-size:11px;padding:8px 4px">Air4<span class="btn-sub">+3,300원/월</span></button>
-          <button class="btn${pd==='air2'?' on':''}" onclick="setSaleProduct('air2',${idx})" style="font-size:11px;padding:8px 4px">Air2<span class="btn-sub">혜택제공</span></button>
+          <button class="btn${pd==='air4'?' on':''}" onclick="setSaleProduct('air4',${idx})" style="font-size:11px;padding:8px 4px">Air4<span class="btn-sub">${S.svc==='both'?'+8,800원/월':'+3,300원/월'}</span></button>
+          <button class="btn${pd==='air2'?' on':''}" onclick="setSaleProduct('air2',${idx})" style="font-size:11px;padding:8px 4px">Air2<span class="btn-sub">${S.svc==='both'?'+2,200원/월':'혜택제공'}</span></button>
         </div>${payHtml}`:''}
       </div>`};
   }
@@ -1446,10 +1455,10 @@ function getInetFee(pid){
 function getTVFee(pid,isFirst){
   const d=TV[pid];if(!d)return 0;
   if(S.svc==='tv_only'){
-    // SM + 2년이내 → TV1은 u1, TV2+는 u2
-    if(S.sm&&S.gigaMode==='within2y') return isFirst ? d['u1']??0 : d['u2']??0;
-    // SM만 or SM+2년이상 → u2 (판매장비 여부 무관하게 TV요금은 SM 적용)
-    if(S.sm)                          return d['u2']??0;
+    // SM + 다셋탑 or 1년이내 → TV1은 u1, TV2+는 u2
+    if(S.sm&&(S.gigaMode==='within2y')) return isFirst ? d['u1']??0 : d['u2']??0;
+    // SM + 다셋탑 or 1년이상 → u2
+    if(S.sm) return d['u2']??0;
     // SM 없음 → u1
     return d['u'+(isFirst?'1':'2')]??0;
   }
@@ -1462,8 +1471,8 @@ function getSTBFee(sid,isFirst,tvIdx){
   const idx=tvIdx||(isFirst?1:2);
   const sl=S.sales[idx];
   const saleOkStb=sl&&sl.on&&sl.product!=='none';
-  // 판매장비 선택 시 → SM 셋탑 무시, 일반요금 적용
-  if(saleOkStb) return isFirst?d.n1:d.n2;
+  // 판매장비 선택 시 → 셋탑임대료 0원 (판매장비가 셋탑 대체)
+  if(saleOkStb) return 0;
   // 인터넷+TV 모드 TV1 → SM 무관 일반요금
   if(S.svc==='both'&&idx===1) return d.n1;
   // SM + 2년이내 (TV만) → TV1은 일반 셋탑(n1=4,400), TV2+는 SM 셋탑(s2=0원)
@@ -1680,11 +1689,16 @@ function buildSMS(lines,total){
     if(!tp&&!sp&&!slOkFl)continue;
     const tvf=getTVFee(tp,i===1),sf=getSTBFee(sp,i===1,i);
     const saleExFl=slOkFl?getSaleExtraForIdx(i):0;
-    let tl=`  BTV${i===1?'':i} : ${fmt(tvf+sf)}원`;
+    let tl=`  BTV${i===1?'':i} : ${fmt(tvf+sf+saleExFl)}원`;
     // 판매상품 분할금 별도 표기
     if(slOkFl){
       if(slFl.product==='moving'&&slFl.payType==='split') tl+=`\n  무빙 단말 분할금 : 11,000원/월 (36개월)`;
-      else if(slFl.product==='air4') tl+=`\n  Air4 단말 분할금 : 3,300원/월 (36개월)`;
+      else if(slFl.product==='air4'){
+        if(isBoth) tl+=`\n  Air4 기기값 : 8,800원/월 (36개월, 할인 미적용)`;
+        else tl+=`\n  Air4 단말 분할금 : 3,300원/월 (36개월)`;
+      } else if(slFl.product==='air2'){
+        if(isBoth) tl+=`\n  Air2 할부금 : 2,200원/월 (6,600원 할인 적용)`;
+      }
     }
     if(slOkFl&&slFl.product==='moving'&&slFl.payType==='lump') tl+=`\n  일시불 : 360,000원 (1회 청구)`;
     fl.push(tl);
@@ -1768,13 +1782,21 @@ function buildSMS(lines,total){
     if(!sl||!sl.on||sl.product==='none'||!soAvail)continue;
     const tvLabel=`BTV${i===1?'':i}`;
     if(sl.product==='moving'){
-      // 무빙: Smart3미니 셋탑임대료 할인만 표기 (단말비용 제외)
       extraLines.push(`  ${tvLabel} Smart3미니 셋탑임대료 : 2,200원 × ${termYr*12}개월 = ${fmt(2200*termYr*12)}원 할인적용`);
     } else if(sl.product==='air4'){
-      extraLines.push(`  갤럭시탭 A11+ 할인 : 5,500원 × 36개월 = ${fmt(5500*36)}원 지원`);
+      if(isBoth){
+        extraLines.push(`  ${tvLabel} Air4 기기값 : 8,800원/월 × 36개월 = ${fmt(8800*36)}원 (할인 미적용)`);
+      } else {
+        extraLines.push(`  갤럭시탭 A11+ 할인 : 5,500원 × 36개월 = ${fmt(5500*36)}원 지원`);
+      }
       extraLines.push(`  제품사양 : https://www.samsung.com/sec/tablets/galaxy-tab-a11-wifi-x230n/SM-X230NZAFKOO/`);
     } else if(sl.product==='air2'){
-      extraLines.push(`  갤럭시탭 A7 : 8,800원 × 36개월 = ${fmt(8800*36)}원 지원`);
+      if(isBoth){
+        extraLines.push(`  ${tvLabel} Air2 할부금 : 2,200원/월 (6,600원 할인 적용)`);
+        extraLines.push(`  갤럭시탭 A7 : 2,200원 × 36개월 = ${fmt(2200*36)}원`);
+      } else {
+        extraLines.push(`  갤럭시탭 A7 : 8,800원 × 36개월 = ${fmt(8800*36)}원 지원`);
+      }
       extraLines.push(`  제품사양 : https://www.samsung.com/sec/tablets/galaxy-tab-a7-t500/SM-T500NZSEKOO/`);
     }
   }
@@ -1888,6 +1910,9 @@ if(window.navigator.standalone)$('install-banner')&&($('install-banner').style.d
 
 // 초기화
 setSvc('both');
+// 서비스매니저 항상 ON
+S.sm=true;
+syncSM();
 loadRepInfo();
 syncTermButtons();
 document.addEventListener('input',e=>{if(e.target.tagName==='SELECT')calcAll();});

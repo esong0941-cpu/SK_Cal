@@ -1764,18 +1764,6 @@ function buildSMS(lines,total){
       }
       fl.push(fs);
     }
-    // T+B결합: 기간별 요금 전체 표기
-    if(S.type==='tb'&&TB_BASE[ip]){
-      const base=TB_BASE[ip];
-      const subLabel=['10년 미만','20년 미만','30년 미만','30년 이상'][tbSubIdx];
-      const useLabels=['1년 미만','1~2년','2~3년','3년 이상'];
-      fl.push(`\n  ※ T+B결합 (결합년수: ${subLabel}) 사용기간별 요금`);
-      TB_MATRIX[tbSubIdx].forEach((r,i)=>{
-        const fee=fmt(Math.round(base*(1-r)));
-        const current=i===0?' ← 현재':'';
-        fl.push(`     ${useLabels[i]} : ${fee}원 (${r*100}% 할인)${current}`);
-      });
-    }
   }
   for(let i=1;i<=S.tvCount;i++){
     const tp=cselVal(i===1?'tvp1':'tvp'+i),sp=cselVal(i===1?'stb1':'stb'+i);
@@ -1784,7 +1772,6 @@ function buildSMS(lines,total){
     const tvf=getTVFee(tp,i===1),sf=getSTBFee(sp,i===1,i);
     const saleExFl=slOkFl?getSaleExtraForIdx(i):0;
     let tl=`  BTV${i===1?'':i} : ${fmt(tvf+sf+saleExFl)}원`;
-    // 판매상품 분할금 별도 표기
     if(slOkFl){
       if(slFl.product==='moving'&&slFl.payType==='split') tl+=`\n  무빙 단말 분할금 : 11,000원/월 (36개월)`;
       else if(slFl.product==='air4'){
@@ -1796,6 +1783,18 @@ function buildSMS(lines,total){
     }
     if(slOkFl&&slFl.product==='moving'&&slFl.payType==='lump') tl+=`\n  일시불 : 360,000원 (1회 청구)`;
     fl.push(tl);
+  }
+  // T+B결합: 기간별 요금 표기 (BTV 뒤에)
+  if(!isTvOnly&&ip&&S.type==='tb'&&TB_BASE[ip]){
+    const base=TB_BASE[ip];
+    const subLabel=['10년 미만','20년 미만','30년 미만','30년 이상'][tbSubIdx];
+    const useLabels=['1년 미만','1~2년','2~3년','3년 이상'];
+    fl.push(`\n  ※ T+B결합 (결합년수: ${subLabel}) 사용기간별 요금`);
+    TB_MATRIX[tbSubIdx].forEach((r,i)=>{
+      const fee=fmt(Math.round(base*(1-r)));
+      const current=i===0?' ← 현재':'';
+      fl.push(`     ${useLabels[i]} : ${fee}원 (${r*100}% 할인)${current}`);
+    });
   }
   if(S.phone){const pp=cselVal('phone-plan');fl.push(`  전화 : ${fmt(PHONE_FEE[pp]||0)}원`);}
   const seonapRaw=S.sm?cselVal('seonap-sel'):'0';

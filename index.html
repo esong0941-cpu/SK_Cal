@@ -1902,10 +1902,6 @@ function buildSMS(lines,total){
     mobileLines.push(`  SKT 핸드폰 기본료 할인`);
     mobileLines.push(`  1회선 3,500원 / 2회선 7,000원 / 3회선 18,000원 / 4~5회선 24,000원`);
     if(isLan)mobileLines.push(`  ※ 광랜 결합 시 최대 18,000원`);
-  } else if(S.type==='tb'){
-    mobileLines.push(`  T+B결합 (T인터넷+BTV)`);
-    mobileLines.push(`  인터넷 기간별 할인 적용`);
-    mobileLines.push(`  TV는 핸드폰미결합 요금 적용`);
   }
 
   // ■ 알뜰폰결합 안내 (요가결/요우결)
@@ -1928,8 +1924,7 @@ function buildSMS(lines,total){
   let msg=`[SK브로드밴드 가입 안내]\n\n`;
   msg+=`안녕하세요 고객님\n${rpx} ${rn} 입니다.\n`;
   msg+=`\n■ 상담상품\n${pl.join('\n')}`;
-  msg+=`\n\n■ 월요금\n${fl.join('\n')}`;
-  msg+=`\n\n  월 납부액 : ${fmt(total)}원 (VAT포함)`;
+  msg+=`\n\n■ 월요금 : ${fmt(total)}원 (VAT포함)\n${fl.join('\n')}`;
   if(discLines.length) msg+=`\n\n■ 할인 혜택\n${discLines.join('\n')}`;
   if(giftLine) msg+=`\n\n■ 사은품\n${giftLine}`;
   msg+=`\n\n■ 약정 안내\n${clLine}`;

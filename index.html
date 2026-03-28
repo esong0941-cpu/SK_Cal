@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- v20260328 -->
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
@@ -11,11 +12,26 @@
 <meta name="theme-color" content="#ffffff">
 <link rel="manifest" href="manifest.json">
 <script>
-// 기존 SW 제거
 if('serviceWorker' in navigator){
-  navigator.serviceWorker.getRegistrations().then(regs=>{
-    regs.forEach(r=>r.unregister());
-  });
+  const swCode=`
+const CACHE='skb-v20260328';
+self.addEventListener('install',e=>{self.skipWaiting();});
+self.addEventListener('activate',e=>{
+  e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))));
+  self.clients.claim();
+});
+self.addEventListener('fetch',e=>{
+  if(e.request.method!=='GET')return;
+  e.respondWith(
+    fetch(e.request).then(res=>{
+      const clone=res.clone();
+      caches.open(CACHE).then(c=>c.put(e.request,clone));
+      return res;
+    }).catch(()=>caches.match(e.request))
+  );
+});`;
+  const b=new Blob([swCode],{type:'application/javascript'});
+  navigator.serviceWorker.register(URL.createObjectURL(b)).catch(()=>{});
 }
 </script>
 <style>
@@ -124,6 +140,7 @@ svg{display:inline-block;vertical-align:middle;flex-shrink:0}
 /* 그리드 */
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:7px}
 .g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:5px}
 .g5{display:grid;grid-template-columns:repeat(5,1fr);gap:5px}
 
 /* ── 힌트 ── */
@@ -362,18 +379,37 @@ svg{display:inline-block;vertical-align:middle;flex-shrink:0}
 
     <div class="dv"></div>
 
-    <!-- 결합 유형: 인터넷+TV용 (핸드폰미결합/핸드폰결합) -->
+    <!-- 결합 유형: 인터넷+TV용 (핸드폰미결합/요가결/T+B결합) -->
     <div id="type-section" style="display:none">
       <div class="sec-lbl">결합 유형</div>
-      <div class="g2">
+      <div class="g3">
         <button class="btn on" id="btn-u" onclick="setType('u')">
           <svg class="i18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
           <div><span>핸드폰미결합</span><span class="btn-sub">폰 미결합</span></div>
         </button>
         <button class="btn" id="btn-ga" onclick="setType('ga')">
           <svg class="i18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-          <div><span>핸드폰결합</span><span class="btn-sub">폰 결합</span></div>
+          <div><span>요가결</span><span class="btn-sub">SKT폰 결합</span></div>
         </button>
+        <button class="btn" id="btn-tb" onclick="setType('tb')">
+          <svg class="i18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+          <div><span>T+B결합</span><span class="btn-sub">기간별 할인</span></div>
+        </button>
+      </div>
+      <!-- T+B결합 선택 -->
+      <div id="tb-month-section" style="display:none;margin-top:10px">
+        <div style="margin-bottom:8px">
+          <div class="sec-lbl">가입년수</div>
+          <div class="g4" style="gap:6px">
+            <button class="btn on" id="tb-sub-0" onclick="setTBSub(0)"><span>10년 미만</span></button>
+            <button class="btn" id="tb-sub-1" onclick="setTBSub(1)"><span>20년 미만</span></button>
+            <button class="btn" id="tb-sub-2" onclick="setTBSub(2)"><span>30년 미만</span></button>
+            <button class="btn" id="tb-sub-3" onclick="setTBSub(3)"><span>30년 이상</span></button>
+          </div>
+        </div>
+        <div style="text-align:center">
+          <span id="tb-discount-badge" style="font-size:12px;font-weight:700;color:var(--p);background:var(--p-bg);padding:4px 12px;border-radius:20px"></span>
+        </div>
       </div>
       <div class="dv"></div>
     </div>
@@ -850,6 +886,38 @@ const INET={
   giga:{u:34100, ga:26400, basic:39600, solo:39600},
   lan: {u:22000, ga:18700, basic:23100, solo:23100},
 };
+// T+B결합 기본료
+const TB_BASE={lite:34100, giga:40700, lan:23100};
+// T+B결합 할인율 (가입년수 기준)
+// T+B결합 할인율 매트릭스 [결합년수0~3][사용기간0~3]
+// 결합년수: 0=10년미만, 1=20년미만, 2=30년미만, 3=30년이후
+// 사용기간: 0=1년미만, 1=1~2년, 2=2~3년, 3=3년이상
+const TB_MATRIX=[
+  [0,    0,    0,    0.10], // 10년 미만
+  [0,    0,    0.05, 0.20], // 20년 미만
+  [0,    0.05, 0.10, 0.30], // 30년 미만
+  [0.10, 0.20, 0.30, 0.50], // 30년 이상
+];
+const TB_RATE_SUB=[0, 0, 0, 0.10]; // 신규(1년미만) 기준 현재요금
+let tbSubIdx=0;
+
+function getTBRate(){return TB_MATRIX[tbSubIdx][0];}
+function getTBMonthFee(pid){
+  const base=TB_BASE[pid];if(!base)return null;
+  return Math.round(base*(1-getTBRate()));
+}
+function setTBSub(idx){
+  tbSubIdx=idx;
+  [0,1,2,3].forEach(i=>{const b=$('tb-sub-'+i);if(b)b.classList.toggle('on',i===idx);});
+  syncTBBadge();calcAll();
+}
+function syncTBBadge(){
+  if(S.type!=='tb')return;
+  const rate=getTBRate()*100;
+  const subLabel=['10년 미만','20년 미만','30년 미만','30년 이상'][tbSubIdx];
+  const badge=$('tb-discount-badge');
+  if(badge) badge.textContent=`결합 ${subLabel} · 현재 ${rate}% 할인`;
+}
 const TV={all:{u1:16500,ga1:15400,basic1:23100,solo1:23100,u2:9350,ga2:9350,basic2:23100,solo2:23100},standard:{u1:13200,ga1:12100,basic1:19800,solo1:19800,u2:7700,ga2:7700,basic2:19800,solo2:19800},economy:{u1:9900,ga1:8800,basic1:16500,solo1:16500,u2:6050,ga2:6050,basic2:16500,solo2:16500}};
 const STB={smart3:{lb:'Smart3',n1:4400,n2:2200,s1:0,s2:0},smart3mini:{lb:'Smart3미니',n1:2200,n2:2200,s1:2200,s2:2200},ai5:{lb:'AI5',n1:7700,n2:7700,s1:7700,s2:7700},air4:{lb:'Air4',n1:8800,n2:8800,s1:8800,s2:8800}};
 const PHONE_FEE={skb1:2200,skb2:3300};
@@ -928,7 +996,13 @@ function getPlanSnapshot(){
     else if(inFee&&l.trim())feeLines.push(l.trim());
   }
   const label=makeAutoLabel();
-  return {smsText,totalText,totalAmt,prodLines,feeLines,discount:S.discount,gift,baro36,svc:S.svc,sm:S.sm,label};
+  const isTB=S.type==='tb';
+  const ipSnap=cselVal('inet-plan');
+  const tbBase=isTB&&ipSnap?TB_BASE[ipSnap]:0;
+  const tbRateSaved=isTB?getTBRate():0;
+  const tbSubLabelSaved=isTB?['10년 미만','20년 미만','30년 미만','30년 이상'][tbSubIdx]:'';
+  const tbMatrixSaved=isTB?TB_MATRIX[tbSubIdx]:[];
+  return {smsText,totalText,totalAmt,prodLines,feeLines,discount:S.discount,gift,baro36,svc:S.svc,sm:S.sm,label,isTB,tbBase,tbRate:tbRateSaved,tbSubLabel:tbSubLabelSaved,tbMatrix:tbMatrixSaved};
 }
 
 function savePlan(ab){
@@ -1018,87 +1092,92 @@ function buildCompareSMS(){
 
   let msg=`[SK브로드밴드 비교견적 안내]\n\n안녕하세요, 고객님 😊 ${rpx} ${rn}입니다.\n인터넷 상품 비교 안내드립니다.\n`;
 
-  const extractCore=(snap)=>{
-    const lines=snap.smsText.split('\n');
-    const start=lines.findIndex(l=>l.includes('■ 상담상품'));
-    const end=lines.findIndex(l=>l.includes('궁금하신'));
-    return lines.slice(start>=0?start:0,end>=0?end:lines.length).join('\n');
-  };
+  // 추천 판단
+  const plans=[planA,planB].filter(Boolean);
+  let recPlan=null;
+  if(planA&&planB){
+    const netA=planA.totalAmt*36-planA.gift;
+    const netB=planB.totalAmt*36-planB.gift;
+    recPlan=netA<=netB?planA:planB;
+  }
 
-  // 각 안 표기
-  const renderPlan=(snap,badge='')=>{
+  // 각 안 렌더
+  const renderPlan=(snap)=>{
     if(!snap)return'';
-    let s=`◆ ${snap.label}${badge?` ${badge}`:''}\n`;
+    const isRec=snap===recPlan;
+    let s=`\n◆ ${snap.label}${isRec?' ⭐추천':''}\n`;
+
     // 상품
     if(snap.prodLines.length) s+=`■ 상품\n${snap.prodLines.map(l=>`  ${l}`).join('\n')}\n`;
+
     // 월요금
     const feeLine=snap.feeLines.find(l=>l.includes('납부액'))||'';
     if(feeLine) s+=`■ 월요금  ${feeLine.replace('월 납부액 :','').trim()}\n`;
-    if(snap.discount==='baro'){
+
+    // T+B결합
+    if(snap.isTB&&snap.tbBase){
+      const useLabels=['1년 미만','1~2년','2~3년','3년 이상'];
+      s+=`  ※ T+B결합 (결합년수: ${snap.tbSubLabel}) 사용기간별 요금\n`;
+      snap.tbMatrix.forEach((r,i)=>{
+        const fee=Math.round(snap.tbBase*(1-r)).toLocaleString();
+        const cur=i===0?' ← 현재':'';
+        s+=`     ${useLabels[i]} : ${fee}원 (${r*100}% 할인)${cur}\n`;
+      });
+    } else if(snap.discount==='baro'){
       const dc=snap.baro36/36;
       s+=`  ※ 바로할인 ${dc.toLocaleString()}원 적용\n`;
       s+=`■ 할인혜택  총 ${snap.baro36.toLocaleString()}원 절감 (36개월 기준)\n`;
-      s+=`  출동비 면제\n`;
-    } else if(snap.sm){
-      s+=`■ 추가혜택  서비스매니저 출동비 면제\n`;
-      if(snap.gift>0) s+=`■ 사은품  ${snap.gift.toLocaleString()}원 상품권 제공\n`;
-    } else if(snap.gift>0){
-      s+=`■ 사은품  ${snap.gift.toLocaleString()}원 상품권 제공\n`;
     }
+
+    // 사은품
+    if(snap.gift>0) s+=`■ 사은품  모바일 상품권 ${snap.gift.toLocaleString()}원\n`;
+
+    // 출동비 (스냅샷에서 추출)
+    const dispatchInfo=extractDispatch(snap);
+    if(dispatchInfo) s+=dispatchInfo;
+
     return s;
   };
 
-  // 추천 판단
-  let recLabel='';
-  if(planA&&planB){
+  // 출동비 추출 함수
+  const extractDispatch=(snap)=>{
+    const lines=snap.smsText.split('\n');
+    const start=lines.findIndex(l=>l.includes('■ 출동비'));
+    if(start<0)return'';
+    const end=lines.findIndex((l,i)=>i>start&&l.startsWith('■'));
+    const dispLines=lines.slice(start,end>0?end:start+5).filter(l=>l.trim());
+    if(!dispLines.length)return'';
+    let s='■ 출동비';
+    // 합계줄
+    const totalLine=dispLines.find(l=>l.includes('1회 청구'));
+    if(totalLine) s+=` : ${totalLine.replace(/.*출동비 1회 청구/,'').trim()}\n`;
+    else s+='\n';
+    // 상세줄
+    dispLines.slice(1).forEach(l=>{
+      if(l.trim()) s+=` > ${l.trim()}\n`;
+    });
+    return s;
+  };
+
+  plans.forEach(snap=>{ msg+=renderPlan(snap); });
+
+  // 공통 안내
+  msg+=`\n◆ 공통 안내\n`;
+  msg+=`■ 약정  ${termYr}년 약정 (기간 내 해지 시 할인반환금 발생)\n`;
+  const giftPlans=plans.filter(p=>p.gift>0);
+  giftPlans.forEach(p=>{ msg+=`  ※ ${p.label}은 1년 이내 해지 시 사은품 반환 추가 발생\n`; });
+  const baroPlan=plans.find(p=>p.discount==='baro');
+  if(baroPlan) msg+=`  ※ ${baroPlan.label}(바로할인)은 사은품 미제공\n`;
+
+  // 추천
+  if(planA&&planB&&recPlan){
     const netA=planA.totalAmt*36-planA.gift;
     const netB=planB.totalAmt*36-planB.gift;
-    recLabel=netA<=netB?'⭐추천':'';
-    const recBadgeA=netA<=netB?'⭐추천':'';
-    const recBadgeB=netB<netA?'⭐추천':'';
-    if(planA) msg+=`\n${renderPlan(planA,recBadgeA)}`;
-    if(planB) msg+=`\n${renderPlan(planB,recBadgeB)}`;
-  } else {
-    if(planA) msg+=`\n${renderPlan(planA)}`;
-    if(planB) msg+=`\n${renderPlan(planB)}`;
-  }
-
-  // 요금 비교
-  if(planA&&planB){
-    const diff=planB.totalAmt-planA.totalAmt;
-    const cheaper=diff<=0?planA:planB;
-    const absDiff=Math.abs(diff);
-    msg+=`◆ 요금 비교\n`;
-    msg+=`  ${planA.label} : ${planA.totalText}\n`;
-    msg+=`  ${planB.label} : ${planB.totalText}\n`;
-    if(absDiff>0) msg+=`  👉 월 ${absDiff.toLocaleString()}원 절약 (${cheaper.label}이 저렴)\n`;
-
-    // 추천 안내
-    const netA=planA.totalAmt*36-planA.gift;
-    const netB=planB.totalAmt*36-planB.gift;
-    const best=netA<=netB?planA:planB;
-    const worst=netA<=netB?planB:planA;
     const saving=Math.abs(netA-netB);
+    const worst=recPlan===planA?planB:planA;
     msg+=`\n💡 추천 안내\n`;
-    msg+=`  ${best.label} 기준 3년 총 ${saving.toLocaleString()}원 절약\n`;
-    if(best.discount==='baro'&&worst.gift>0){
-      msg+=`  → 바로할인 혜택이 사은품보다 유리\n`;
-    }
-
-    // 공통 안내
-    msg+=`\n◆ 공통 안내\n`;
-    msg+=`■ 약정  ${termYr}년 약정 (기간 내 해지 시 할인반환금 발생)\n`;
-    // 사은품 있는 안 해지 시 추가 안내
-    const giftPlan=[planA,planB].find(p=>p&&p.gift>0);
-    if(giftPlan) msg+=`  ※ ${giftPlan.label}은 1년 이내 해지 시 사은품 반환 추가 발생\n`;
-    // 바로할인 - 사은품 없음 안내
-    const baroPlan=[planA,planB].find(p=>p&&p.discount==='baro');
-    if(baroPlan) msg+=`  ※ ${baroPlan.label}(바로할인)은 사은품 미제공\n`;
-    // 출동비 면제: 바로할인 또는 서비스매니저
-    const freePlans=[planA,planB].filter(p=>p&&(p.discount==='baro'||p.sm));
-    msg+=`■ 출동비  기본 청구`;
-    if(freePlans.length>0) msg+=` ※ ${freePlans.map(p=>p.label).join(', ')}은 면제 적용`;
-    msg+='\n';
+    msg+=`  ${recPlan.label} 기준 3년 총 ${saving.toLocaleString()}원 유리\n`;
+    if(recPlan.discount==='baro'&&worst.gift>0) msg+=`  → 바로할인 혜택이 사은품보다 유리\n`;
   }
 
   msg+=`\n궁금하신 점 언제든 문의 주세요 😊\nSK브로드밴드\n영업부터 개통·AS까지 책임지는 지점`;
@@ -1117,10 +1196,9 @@ function sendCompareSMS(){
 }
 
 function copySMS(id){
-  const t=$(id)?.textContent||'';
-  navigator.clipboard.writeText(t).then(()=>{
-    const toast=$('toast');if(toast){toast.classList.add('show');setTimeout(()=>toast.classList.remove('show'),2000);}
-  });
+  const t=$(id||'sms-box')?.textContent||'';
+  const done=()=>{const x=$('toast');if(x){x.classList.add('show');setTimeout(()=>x.classList.remove('show'),2200);}};
+  navigator.clipboard?.writeText(t).then(done).catch(()=>{const ta=document.createElement('textarea');ta.value=t;ta.style.cssText='position:fixed;opacity:0';document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);done();});
 }
 
 // ── 서비스 구성 (3종)
@@ -1181,9 +1259,10 @@ function setSvc(v){
     if(S.tvCount===0){S.tvCount=1;for(let i=0;i<=4;i++)$('tc'+i).classList.toggle('on',i===1);}
     // 인터넷+TV: basic 없음, u가 기본
     if(S.svc==='inet'||S.type==='basic') S.type='u';
-    ['btn-u','btn-ga'].forEach(id=>{const el=$(id);if(el)el.classList.remove('on');});
-    const activeBtn='btn-'+(S.type==='ga'?'ga':'u');
+    ['btn-u','btn-ga','btn-tb'].forEach(id=>{const el=$(id);if(el)el.classList.remove('on');});
+    const activeBtn=S.type==='ga'?'btn-ga':S.type==='tb'?'btn-tb':'btn-u';
     $(activeBtn)?.classList.add('on');
+    setEl('tb-month-section',el=>el.style.display=S.type==='tb'?'block':'none');
   }
   syncTermButtons();renderTV();calcAll();
 }
@@ -1192,18 +1271,28 @@ function setSvc(v){
 function setType(t){
   S.type=t;
   // 인터넷+TV 버튼
-  ['btn-u','btn-ga'].forEach(id=>{const el=$(id);if(el)el.classList.remove('on');});
-  const bothBtn='btn-'+(t==='basic'?'basic':t==='ga'?'ga':'u');
+  ['btn-u','btn-ga','btn-tb'].forEach(id=>{const el=$(id);if(el)el.classList.remove('on');});
+  const bothBtn=t==='ga'?'btn-ga':t==='tb'?'btn-tb':'btn-u';
   $(bothBtn)?.classList.add('on');
+  // T+B결합 개월 수 입력란 표시
+  setEl('tb-month-section',el=>el.style.display=t==='tb'?'block':'none');
   // 인터넷 단독 버튼
   ['btn-inet-solo','btn-inet-ga'].forEach(id=>{const el=$(id);if(el)el.classList.remove('on');});
   if(t==='basic') $('btn-inet-solo')?.classList.add('on');
   if(t==='ga') $('btn-inet-ga')?.classList.add('on');
   // 배지
-  const lbl={basic:'기본',u:'핸드폰미결합',ga:'핸드폰결합'}[t]||'';
-  const cls=t==='ga'?'bdg bdg-ga':'bdg';
+  const lbl={basic:'기본',u:'핸드폰미결합',ga:'요가결',tb:'T+B결합'}[t]||'';
+  const cls=t==='ga'||t==='tb'?'bdg bdg-ga':'bdg';
   setEl('bdg-type2',el=>{el.textContent=lbl;el.className=cls;});
+  syncTBBadge();
   calcAll();
+}
+
+function syncTBBadge(){
+  if(S.type!=='tb')return;
+  const rate=getTBRate()*100;
+  const badge=$('tb-discount-badge');
+  if(badge) badge.textContent=`${rate}% 할인 적용`;
 }
 
 // ── 할인구분
@@ -1438,8 +1527,10 @@ function getBaroDC(pid){
 
 function getInetFee(pid){
   const d=INET[pid];if(!d)return null;
-  // 패밀리: 고정 요금, 바로할인/요가결 적용 불가
+  // 패밀리: 고정 요금
   if(S.discount==='fam') return FAM[pid]??null;
+  // T+B결합: 기간별 할인
+  if(S.type==='tb') return getTBMonthFee(pid);
   // 인터넷 단독
   if(S.svc==='inet'){
     const base=S.type==='ga'?d.ga:d.solo;
@@ -1463,7 +1554,9 @@ function getTVFee(pid,isFirst){
     return d['u'+(isFirst?'1':'2')]??0;
   }
   if(S.type==='basic') return d['solo'+(isFirst?'1':'2')]??0;
-  return d[S.type+(isFirst?'1':'2')]??0;
+  // T+B결합: TV는 핸드폰미결합(u) 요금 적용
+  const t=S.type==='tb'?'u':S.type;
+  return d[t+(isFirst?'1':'2')]??0;
 }
 
 function getSTBFee(sid,isFirst,tvIdx){
@@ -1524,6 +1617,7 @@ function calcInstallFee(){
 
 function calcAll(){
   let total=0;const smsLines=[];
+  syncTBBadge();
   const seonapRaw=S.sm?cselVal('seonap-sel'):'0';
   const seonap=seonapRaw==='0'?0:2200; // 월 할인액은 항상 2200원
   setEl('seonap-tbl-wrap',el=>el.style.display=(seonap>0&&S.sm)?'block':'none');
@@ -1680,7 +1774,23 @@ function buildSMS(lines,total){
       let fs=`  인터넷 : ${fmt(fee)}원`;
       if(S.discount==='baro')fs+=` (바로할인 ${fmt(getBaroDC(ip))}원 적용)`;
       else if(S.discount==='fam')fs+=` (패밀리 고정요금)`;
+      else if(S.type==='tb'){
+        const rate=getTBRate()*100;
+        fs+=` (T+B결합 ${rate}% 할인)`;
+      }
       fl.push(fs);
+    }
+    // T+B결합: 기간별 요금 전체 표기
+    if(S.type==='tb'&&TB_BASE[ip]){
+      const base=TB_BASE[ip];
+      const subLabel=['10년 미만','20년 미만','30년 미만','30년 이상'][tbSubIdx];
+      const useLabels=['1년 미만','1~2년','2~3년','3년 이상'];
+      fl.push(`\n  ※ T+B결합 (결합년수: ${subLabel}) 사용기간별 요금`);
+      TB_MATRIX[tbSubIdx].forEach((r,i)=>{
+        const fee=fmt(Math.round(base*(1-r)));
+        const current=i===0?' ← 현재':'';
+        fl.push(`     ${useLabels[i]} : ${fee}원 (${r*100}% 할인)${current}`);
+      });
     }
   }
   for(let i=1;i<=S.tvCount;i++){
@@ -1801,13 +1911,17 @@ function buildSMS(lines,total){
     }
   }
 
-  // ■ 휴대폰 결합 할인 (핸드폰결합 - 요가결만)
+  // ■ 휴대폰 결합 할인
   let mobileLines=[];
   if(S.type==='ga'){
     const isLan=ip==='lan';
     mobileLines.push(`  SKT 핸드폰 기본료 할인`);
     mobileLines.push(`  1회선 3,500원 / 2회선 7,000원 / 3회선 18,000원 / 4~5회선 24,000원`);
     if(isLan)mobileLines.push(`  ※ 광랜 결합 시 최대 18,000원`);
+  } else if(S.type==='tb'){
+    mobileLines.push(`  T+B결합 (T인터넷+BTV)`);
+    mobileLines.push(`  인터넷 기간별 할인 적용`);
+    mobileLines.push(`  TV는 핸드폰미결합 요금 적용`);
   }
 
   // ■ 알뜰폰결합 안내 (요가결/요우결)
@@ -1899,7 +2013,6 @@ function loadRepInfo(){
 }
 function formatPhone(el){let v=el.value.replace(/\D/g,'');if(v.length<=3)el.value=v;else if(v.length<=7)el.value=v.slice(0,3)+'-'+v.slice(3);else el.value=v.slice(0,3)+'-'+v.slice(3,7)+'-'+v.slice(7,11);}
 function sendSMS(){const p=($('cust-phone')?.value||'').replace(/\D/g,'');const t=$('sms-box').textContent;if(!p){alert('고객 전화번호를 먼저 입력해 주세요.');return;}window.location.href='sms:'+p+'?body='+encodeURIComponent(t);}
-function copySMS(){const t=$('sms-box').textContent;const done=()=>{const x=$('toast');x.classList.add('show');setTimeout(()=>x.classList.remove('show'),2200);};navigator.clipboard?.writeText(t).then(done).catch(()=>{const ta=document.createElement('textarea');ta.value=t;ta.style.cssText='position:fixed;opacity:0';document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);done();});}
 
 let _dp=null;
 window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();_dp=e;if(!localStorage.getItem('pwa-dismissed'))$('install-banner').style.display='flex';});

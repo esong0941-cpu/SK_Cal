@@ -1526,8 +1526,13 @@ function getInetFee(pid){
   const d=INET[pid];if(!d)return null;
   // 패밀리: 고정 요금
   if(S.discount==='fam') return FAM[pid]??null;
-  // T+B결합: 기간별 할인
-  if(S.type==='tb') return getTBMonthFee(pid);
+  // T+B결합: 기간별 할인 후 바로할인 추가 적용 가능
+  if(S.type==='tb'){
+    const tbFee=getTBMonthFee(pid);
+    if(tbFee===null) return null;
+    if(S.discount==='baro') return tbFee-getBaroDC(pid);
+    return tbFee;
+  }
   // 인터넷 단독
   if(S.svc==='inet'){
     const base=S.type==='ga'?d.ga:d.solo;

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v20260328b -->
+<!-- v20260611 -->
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
@@ -303,6 +303,24 @@ svg{display:inline-block;vertical-align:middle;flex-shrink:0}
 
 /* SVG 아이콘 헬퍼 */
 .i18{width:18px;height:18px;stroke-width:2}.i16{width:16px;height:16px;stroke-width:2}.i14{width:14px;height:14px;stroke-width:2}
+
+/* ── 비교견적 ── */
+.cmp-hint{font-size:12px;color:var(--g400);margin-bottom:12px}
+.cmp-plan{border-radius:12px;padding:12px 14px;margin-bottom:10px}
+.cmp-plan-a{border:2px solid var(--p)}
+.cmp-plan-b{border:2px solid #10b981}
+.cmp-plan-hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.cmp-label-a{font-size:13px;font-weight:800;color:var(--p)}
+.cmp-label-b{font-size:13px;font-weight:800;color:#10b981}
+.cmp-btns{display:flex;gap:6px}
+.cmp-save-a{padding:5px 12px;border:1.5px solid var(--p);border-radius:8px;background:var(--p);color:#fff;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer}
+.cmp-save-b{padding:5px 12px;border:1.5px solid #10b981;border-radius:8px;background:#10b981;color:#fff;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer}
+.cmp-reset{padding:5px 10px;border:1.5px solid var(--bd);border-radius:8px;background:#fff;color:var(--g500);font-family:inherit;font-size:11px;font-weight:700;cursor:pointer}
+.cmp-summary{font-size:12px;color:var(--g500);line-height:1.7}
+.cmp-diff{border-radius:12px;overflow:hidden;margin-bottom:12px}
+.cmp-diff-inner{background:var(--g100);padding:10px 14px;font-size:14px;font-weight:800;color:var(--g900);text-align:center}
+.cmp-recommend{background:#fefce8;border-top:1px solid #fde047;padding:10px 14px;font-size:12px;font-weight:700;color:#854d0e;line-height:1.6}
+.cmp-send-btn{width:100%;padding:13px;border:none;border-radius:12px;background:var(--red);color:#fff;font-family:inherit;font-size:13px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px}
 </style>
 </head>
 <body>
@@ -481,6 +499,15 @@ svg{display:inline-block;vertical-align:middle;flex-shrink:0}
           <div class="opt-info">
             <span class="opt-name">초고속1년이내</span>
             <span class="opt-desc" id="gigaW2y-sub">해당 시 선택</span>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:8px">
+        <div class="opt-item" id="phone-toggle" onclick="togglePhone()">
+          <svg class="i14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.27h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-.76a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 17z"/></svg>
+          <div class="opt-info">
+            <span class="opt-name">인터넷전화</span>
+            <span class="opt-desc" id="phone-sub-lbl">추가 시 선택</span>
           </div>
         </div>
       </div>
@@ -742,42 +769,40 @@ svg{display:inline-block;vertical-align:middle;flex-shrink:0}
     </div>
 
     <div id="compare-panel" style="display:none;padding:12px 16px 14px">
-      <p style="font-size:12px;color:var(--g400);margin-bottom:12px">요금 계산 탭에서 설정 후 각 안에 저장하세요</p>
+      <p class="cmp-hint">요금 계산 탭에서 설정 후 각 안에 저장하세요</p>
 
       <!-- A안 -->
-      <div style="border:2px solid var(--p);border-radius:12px;padding:12px 14px;margin-bottom:10px">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-          <span id="plan-a-label" style="font-size:13px;font-weight:800;color:var(--p)">A안</span>
-          <div style="display:flex;gap:6px">
-            <button onclick="savePlan('A')" style="padding:5px 12px;border:1.5px solid var(--p);border-radius:8px;background:var(--p);color:#fff;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer">현재 저장</button>
-            <button onclick="clearPlan('A')" style="padding:5px 10px;border:1.5px solid var(--bd);border-radius:8px;background:#fff;color:var(--g500);font-family:inherit;font-size:11px;font-weight:700;cursor:pointer">초기화</button>
+      <div class="cmp-plan cmp-plan-a">
+        <div class="cmp-plan-hd">
+          <span id="plan-a-label" class="cmp-label-a">A안</span>
+          <div class="cmp-btns">
+            <button onclick="savePlan('A')" class="cmp-save-a">현재 저장</button>
+            <button onclick="clearPlan('A')" class="cmp-reset">초기화</button>
           </div>
         </div>
-        <div id="plan-a-summary" style="font-size:12px;color:var(--g500);line-height:1.7">저장된 내용 없음</div>
+        <div id="plan-a-summary" class="cmp-summary">저장된 내용 없음</div>
       </div>
 
       <!-- B안 -->
-      <div style="border:2px solid #10b981;border-radius:12px;padding:12px 14px;margin-bottom:10px">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-          <span id="plan-b-label" style="font-size:13px;font-weight:800;color:#10b981">B안</span>
-          <div style="display:flex;gap:6px">
-            <button onclick="savePlan('B')" style="padding:5px 12px;border:1.5px solid #10b981;border-radius:8px;background:#10b981;color:#fff;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer">현재 저장</button>
-            <button onclick="clearPlan('B')" style="padding:5px 10px;border:1.5px solid var(--bd);border-radius:8px;background:#fff;color:var(--g500);font-family:inherit;font-size:11px;font-weight:700;cursor:pointer">초기화</button>
+      <div class="cmp-plan cmp-plan-b">
+        <div class="cmp-plan-hd">
+          <span id="plan-b-label" class="cmp-label-b">B안</span>
+          <div class="cmp-btns">
+            <button onclick="savePlan('B')" class="cmp-save-b">현재 저장</button>
+            <button onclick="clearPlan('B')" class="cmp-reset">초기화</button>
           </div>
         </div>
-        <div id="plan-b-summary" style="font-size:12px;color:var(--g500);line-height:1.7">저장된 내용 없음</div>
+        <div id="plan-b-summary" class="cmp-summary">저장된 내용 없음</div>
       </div>
 
       <!-- 차액 + 추천 -->
-      <div id="compare-diff" style="display:none;border-radius:12px;overflow:hidden;margin-bottom:12px">
-        <div style="background:var(--g100);padding:10px 14px">
-          <div id="compare-diff-amt" style="font-size:14px;font-weight:800;color:var(--g900);text-align:center"></div>
-        </div>
-        <div id="compare-recommend" style="background:#fefce8;border-top:1px solid #fde047;padding:10px 14px;font-size:12px;font-weight:700;color:#854d0e;line-height:1.6"></div>
+      <div id="compare-diff" class="cmp-diff" style="display:none">
+        <div class="cmp-diff-inner" id="compare-diff-amt"></div>
+        <div id="compare-recommend" class="cmp-recommend"></div>
       </div>
 
       <!-- 비교 문자 생성 -->
-      <button onclick="buildCompareSMS()" style="width:100%;padding:13px;border:none;border-radius:12px;background:var(--red);color:#fff;font-family:inherit;font-size:13px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">
+      <button onclick="buildCompareSMS()" class="cmp-send-btn">
         <svg style="width:15px;height:15px;stroke-width:2" viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
         비교 문자 만들기
       </button>
@@ -936,8 +961,7 @@ const TV_DOTC=['','#2563EB','#6B7280','#374151','#111827'];
 function mkSale(){return {on:false,product:'none',payType:'split'};}
 let S={type:'u',discount:'none',svc:'both',sm:false,giga2y:false,gigaMode:'none',multiset:false,tvCount:1,phone:false,
        sale:{on:false,product:'none',payType:'split'},
-       sales:[null,mkSale(),mkSale(),mkSale(),mkSale()],
-       smTerm:3}; // TV만+SM 약정기간 (년)
+       sales:[null,mkSale(),mkSale(),mkSale(),mkSale()]};
 const fmt=n=>n.toLocaleString('ko-KR');
 const $=id=>document.getElementById(id);
 const setEl=(id,fn)=>{const el=$(id);if(el)fn(el);};
@@ -1283,13 +1307,6 @@ function setType(t){
   calcAll();
 }
 
-function syncTBBadge(){
-  if(S.type!=='tb')return;
-  const rate=getTBRate()*100;
-  const badge=$('tb-discount-badge');
-  if(badge) badge.textContent=`${rate}% 할인 적용`;
-}
-
 // ── 할인구분
 function setDiscount(d){
   S.discount=d;
@@ -1314,20 +1331,9 @@ function setTv(n){
   renderTV();calcAll();
 }
 
-function setSmTerm(t){
-  S.smTerm=t;
-  [1,2,3].forEach(n=>{
-    const btn=$('smterm-'+n);if(!btn)return;
-    btn.classList.toggle('on',n===t);
-  });
-  calcAll();
-}
-
-// ── SM
-function toggleSM(){S.sm=true;syncSM();syncGiga();renderTV();calcAll();}
+// ── SM (항상 ON)
 function syncSM(){
   const isTv=S.svc==='tv_only';
-  S.sm=true;
   $('seonap-area').style.display=isTv?'block':'none';
   if(!isTv){if(CSEL_DEFS['seonap-sel'])CSEL_DEFS['seonap-sel'].value='0';setEl('seonap-sel-label',el=>el.textContent='프로모션 없음');setEl('seonap-tbl-wrap',el=>el.style.display='none');['sum-seonap-row','sum-seonap-row2'].forEach(id=>setEl(id,el=>el.style.display='none'));}
   ['bdg-sm2'].forEach(id=>setEl(id,el=>el.style.display=S.sm?'':'none'));
@@ -2031,9 +2037,8 @@ function installPWA(){if(_dp){_dp.prompt();_dp.userChoice.then(()=>{_dp=null;$('
 function dismissBanner(){$('install-banner').style.display='none';localStorage.setItem('pwa-dismissed','1');}
 if(window.navigator.standalone)$('install-banner')&&($('install-banner').style.display='none');
 
-// 초기화
+// 초기화 (SM은 항상 ON)
 setSvc('both');
-// 서비스매니저 항상 ON
 S.sm=true;
 syncSM();
 loadRepInfo();
